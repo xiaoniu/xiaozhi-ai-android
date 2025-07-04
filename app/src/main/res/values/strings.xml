@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">小智AI</string>
+    <string name="conversation_title">小智AI</string>
+    <string name="connecting">连接中...</string>
+    <string name="connected">已连接</string>
+    <string name="disconnected">未连接</string>
+    <string name="listening">聆听中...</string>
+    <string name="processing">处理中...</string>
+    <string name="speaking">回复中...</string>
+    <string name="start_listening">开始聆听</string>
+    <string name="stop_listening">停止聆听</string>
+    <string name="interrupt">打断</string>
+    <string name="send">发送</string>
+    <string name="input_hint">输入消息...</string>
+    <string name="permission_required">需要录音权限才能使用语音功能</string>
+    <string name="reconnect">重连</string>
+    <string name="clear">清除</string>
+</resources>
