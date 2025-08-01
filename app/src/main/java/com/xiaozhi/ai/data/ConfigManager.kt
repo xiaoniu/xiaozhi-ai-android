@@ -49,7 +49,7 @@ class ConfigManager(private val context: Context) {
      */
     fun isConfigComplete(config: XiaozhiConfig): Boolean {
         return config.name.isNotBlank() &&
-               config.otaUrl.isNotBlank() &&
+               (config.otaUrl.isNotBlank() || config.websocketUrl.isNotBlank()) &&
                config.macAddress.isNotBlank() &&
                config.token.isNotBlank()
     }
@@ -61,7 +61,7 @@ class ConfigManager(private val context: Context) {
         val missingFields = mutableListOf<String>()
         
         if (config.name.isBlank()) missingFields.add("设备名称")
-        if (config.otaUrl.isBlank()) missingFields.add("OTA地址")
+        if (config.otaUrl.isBlank() && config.websocketUrl.isBlank()) missingFields.add("OTA地址或WSS地址(至少填一个)")
         if (config.macAddress.isBlank()) missingFields.add("MAC地址")
         if (config.token.isBlank()) missingFields.add("Token")
         

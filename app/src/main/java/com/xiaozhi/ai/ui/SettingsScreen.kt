@@ -188,9 +188,9 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     OutlinedTextField(
-                        value = editedConfig.otaUrl,
+                        value = editedConfig.websocketUrl,
                         onValueChange = {
-                            editedConfig = editedConfig.copy(otaUrl = it)
+                            editedConfig = editedConfig.copy(websocketUrl = it)
                         },
                         label = { Text("WSS地址", color = Color.Black) },
                         modifier = Modifier.fillMaxWidth(),
@@ -271,7 +271,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                "Tips:\n1.设备名称和Token不影响对话\n2.Mac地址可随机生成\n3.OTA地址和WSS地址必填一个",
+                "Tips:\n1.设备名称和Token不影响对话\n2.Mac地址可随机生成\n3.OTA地址和WSS地址至少填一个",
                 color = Color.Gray,
                 fontSize = 12.sp
             )
