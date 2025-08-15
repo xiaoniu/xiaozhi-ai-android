@@ -79,9 +79,7 @@ fun SettingsScreen(
                 ) {
                     IconButton(
                         onClick = {
-                            if (validateConfigForBack()) {
                                 onBack()
-                            }
                         },
                         modifier = Modifier
                             .size(40.dp)

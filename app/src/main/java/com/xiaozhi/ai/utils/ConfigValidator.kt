@@ -15,7 +15,7 @@ class ConfigValidator(private val context: Context) {
      */
     fun shouldNavigateToSettings(): Boolean {
         val config = configManager.loadConfig()
-        return config.otaUrl.isBlank() && config.websocketUrl.isBlank()
+        return config.otaUrl.isBlank() || config.websocketUrl.isBlank()
     }
     
     /**

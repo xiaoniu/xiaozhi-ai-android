@@ -78,13 +78,6 @@ fun ConversationScreen(
         mutableStateOf(configManager.loadConfig())
     }
     val listState = rememberLazyListState()
-    
-    // 检查配置是否需要跳转到设置页面
-    LaunchedEffect(Unit) {
-        if (configValidator.shouldNavigateToSettings()) {
-            showSettings = true
-        }
-    }
 
     // 自动滚动到底部
     LaunchedEffect(messages.size) {
@@ -111,11 +104,8 @@ fun ConversationScreen(
                 viewModel.updateConfig(newConfig)
                 showSettings = false
             },
-            onBack = { 
-                // 检查配置是否完整，如果不完整且OTA URL为空则不允许返回
-                if (!configValidator.shouldNavigateToSettings()) {
-                    showSettings = false
-                }
+            onBack = {
+                showSettings = false
             }
         )
     } else {
