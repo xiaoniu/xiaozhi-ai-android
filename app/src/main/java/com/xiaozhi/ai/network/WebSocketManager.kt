@@ -31,8 +31,10 @@ class WebSocketManager(private val context: Context) {
 
     companion object {
         private const val TAG = "WebSocketManager"
-        private const val RECONNECT_DELAY = 1000L
-        private const val HELLO_TIMEOUT = 10000L // 10秒超时
+        private const val RECONNECT_DELAY = 2000L // 增加重连延迟
+        private const val HELLO_TIMEOUT = 15000L // 延长握手超时到15秒
+        private const val CONNECT_TIMEOUT = 15L // 连接超时15秒
+        private const val WRITE_TIMEOUT = 15L // 写入超时15秒
     }
 
     private val gson = Gson()
@@ -55,9 +57,9 @@ class WebSocketManager(private val context: Context) {
     val events: SharedFlow<WebSocketEvent> = _events
 
     private val client = OkHttpClient.Builder()
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(0, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS)
+        .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
+        .readTimeout(0, TimeUnit.SECONDS) // 保持无限读取超时
+        .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
         .build()
 
     /**

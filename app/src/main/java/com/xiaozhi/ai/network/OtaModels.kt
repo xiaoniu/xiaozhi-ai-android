@@ -1,104 +1,29 @@
 package com.xiaozhi.ai.network
 
+import android.annotation.SuppressLint
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * OTA设备上报请求数据类
  */
+@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class DeviceReportRequest(
-    @SerialName("version")
-    val version: Int,
-    
-    @SerialName("language")
-    val language: String = "zh-CN",
-    
-    @SerialName("flash_size")
-    val flashSize: Int,
-    
-    @SerialName("minimum_free_heap_size")
-    val minimumFreeHeapSize: Int,
-    
-    @SerialName("mac_address")
-    val macAddress: String,
-    
-    @SerialName("uuid")
-    val uuid: String,
-    
-    @SerialName("chip_model_name")
-    val chipModelName: String,
-    
-    @SerialName("chip_info")
-    val chipInfo: ChipInfo,
-    
     @SerialName("application")
     val application: Application,
-    
-    @SerialName("partition_table")
-    val partitionTable: List<Partition>,
-    
-    @SerialName("ota")
-    val ota: OtaInfo,
     
     @SerialName("board")
     val board: BoardInfo
 ) {
-    @Serializable
-    data class ChipInfo(
-        @SerialName("model")
-        val model: Int,
-        
-        @SerialName("cores")
-        val cores: Int,
-        
-        @SerialName("revision")
-        val revision: Int,
-        
-        @SerialName("features")
-        val features: Int
-    )
     
     @Serializable
     data class Application(
-        @SerialName("name")
-        val name: String,
-        
         @SerialName("version")
         val version: String,
         
-        @SerialName("compile_time")
-        val compileTime: String,
-        
-        @SerialName("idf_version")
-        val idfVersion: String,
-        
         @SerialName("elf_sha256")
         val elfSha256: String
-    )
-    
-    @Serializable
-    data class Partition(
-        @SerialName("label")
-        val label: String,
-        
-        @SerialName("type")
-        val type: Int,
-        
-        @SerialName("subtype")
-        val subtype: Int,
-        
-        @SerialName("address")
-        val address: Int,
-        
-        @SerialName("size")
-        val size: Int
-    )
-    
-    @Serializable
-    data class OtaInfo(
-        @SerialName("label")
-        val label: String
     )
     
     @Serializable
@@ -129,6 +54,7 @@ data class DeviceReportRequest(
 /**
  * OTA响应数据类
  */
+@SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class OtaResponse(
     @SerialName("server_time")
@@ -149,7 +75,7 @@ data class OtaResponse(
         val timestamp: Long,
         
         @SerialName("timeZone")
-        val timeZone: String,
+        val timeZone: String? = null,
         
         @SerialName("timezone_offset")
         val timezoneOffset: Int

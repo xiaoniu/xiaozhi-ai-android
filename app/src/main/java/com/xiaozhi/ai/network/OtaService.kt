@@ -84,50 +84,22 @@ class OtaService {
     }
 
     /**
-     * 创建设备上报请求数据
+     * 创建设备上报请求数据 - 针对非ESP32设备的最小请求
      */
     private fun createDeviceReportRequest(clientId: String, deviceId: String): DeviceReportRequest {
         return DeviceReportRequest(
-            version = 1,
-            language = "zh-CN",
-            flashSize = 0,
-            minimumFreeHeapSize = 0,
-            macAddress = deviceId,
-            uuid = clientId,
-            chipModelName = "",
-            chipInfo = DeviceReportRequest.ChipInfo(
-                model = 0,
-                cores = 0,
-                revision = 0,
-                features = 0
-            ),
             application = DeviceReportRequest.Application(
-                name = "xiaozhi-android-watch",
                 version = "2.0.0",
-                compileTime = "2025-06-19 10:00:00",
-                idfVersion = "4.4.3",
-                elfSha256 = "1234567890abcdef1234567890abcdef1234567890abcdef"
-            ),
-            partitionTable = listOf(
-                DeviceReportRequest.Partition(
-                    label = "",
-                    type = 0,
-                    subtype = 0,
-                    address = 0,
-                    size = 0
-                )
-            ),
-            ota = DeviceReportRequest.OtaInfo(
-                label = "xiaozhi-android-watch"
+                elfSha256 = "c8a8ecb6d6fbcda682494d9675cd1ead240ecf38bdde75282a42365a0e396033"
             ),
             board = DeviceReportRequest.BoardInfo(
-                type = "xiaozhi-android-watch",
-                name = "xiaozhi-android-watch",
-                ssid = "xiaozhi-android-watch",
-                rssi = 0,
-                channel = 0,
-                ip = "192.168.1.1",
-                mac = deviceId
+                type = "wifi", // 标识为Wi-Fi设备类型
+                name = "xiaozhi-android",
+                ssid = "卧室", // Wi-Fi SSID，如需要可从系统获取
+                rssi = -55, // Wi-Fi信号强度，如需要可从系统获取
+                channel = 1, // Wi-Fi频道，如需要可从系统获取
+                ip = "192.168.1.11", // IP地址，如需要可从系统获取
+                mac = deviceId // 使用设备ID作为MAC地址
             )
         )
     }
