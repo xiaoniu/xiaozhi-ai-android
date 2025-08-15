@@ -226,7 +226,7 @@ fun SettingsScreen(
                                 onClick = {
                                     // 生成新的随机MAC地址
                                     val newMacAddress = (1..6).joinToString(":") {
-                                        "%02X".format((0..255).random())
+                                        "%02x".format((0..255).random())
                                     }
                                     editedConfig = editedConfig.copy(
                                         macAddress = newMacAddress

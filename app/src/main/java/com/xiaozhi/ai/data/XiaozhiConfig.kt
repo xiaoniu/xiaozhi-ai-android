@@ -25,7 +25,7 @@ data class XiaozhiConfig(
                 otaUrl = "",
                 websocketUrl = "",
                 macAddress = "",
-                uuid = "12345678",
+                uuid = generateRandomUuid(),
                 token = "test-token",
                 mcpEnabled = false,
                 mcpServers = listOf(
@@ -42,6 +42,13 @@ data class XiaozhiConfig(
             val mac = ByteArray(6)
             random.nextBytes(mac)
             return mac.joinToString(":") { "%02X".format(it) }
+        }
+        
+        /**
+         * 生成随机UUID
+         */
+        fun generateRandomUuid(): String {
+            return java.util.UUID.randomUUID().toString()
         }
     }
 }

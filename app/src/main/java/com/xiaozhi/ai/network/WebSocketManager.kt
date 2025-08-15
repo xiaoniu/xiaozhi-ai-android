@@ -89,12 +89,12 @@ class WebSocketManager(private val context: Context) {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.d(TAG, "WebSocket连接成功，开始握手")
                 isConnected = true
-//                scope.launch {
-//                    // 发送Hello消息
-//                    sendHelloMessage()
-//                    // 启动超时检查
-//                    startHelloTimeout()
-//                }
+                scope.launch {
+                    // 发送Hello消息
+                    sendHelloMessage()
+                    // 启动超时检查
+                    startHelloTimeout()
+                }
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
