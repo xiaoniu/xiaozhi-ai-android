@@ -63,6 +63,10 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     private val _activationCode = MutableStateFlow<String?>(null)
     val activationCode: StateFlow<String?> = _activationCode.asStateFlow()
 
+    // 静音状态管理
+    private val _isMuted = MutableStateFlow(false)
+    val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
+
     // 配置管理
     private val configManager = ConfigManager(application)
     private var config = configManager.loadConfig()
@@ -417,8 +421,12 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     private fun handleBinaryMessage(data: ByteArray) {
         
         Log.d(TAG, "收到二进制消息，长度: ${data.size}")
-        // 播放接收到的音频数据
-        audioManager.playAudio(data)
+        // 只有在非静音状态下才播放音频数据
+        if (!_isMuted.value) {
+            audioManager.playAudio(data)
+        } else {
+            Log.d(TAG, "静音模式，跳过音频播放")
+        }
     }
 
     /**
@@ -594,6 +602,19 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
      */
     fun testAudioPlayback() {
         audioManager.testAudioPlayback()
+    }
+
+    /**
+     * 切换静音状态
+     */
+    fun toggleMute() {
+        _isMuted.value = !_isMuted.value
+        Log.d(TAG, "静音状态切换为: ${_isMuted.value}")
+        
+        // 如果切换到静音状态，停止当前播放
+        if (_isMuted.value) {
+            audioManager.stopPlaying()
+        }
     }
 
     /**

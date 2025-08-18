@@ -70,6 +70,7 @@ fun ConversationScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val showActivationDialog by viewModel.showActivationDialog.collectAsState()
     val activationCode by viewModel.activationCode.collectAsState()
+    val isMuted by viewModel.isMuted.collectAsState()
 
     // 文本输入状态和导航状态
     var textInput by remember { mutableStateOf("") }
@@ -121,6 +122,8 @@ fun ConversationScreen(
             onShowSettings = { showSettings = true },
             showActivationDialog = showActivationDialog,
             activationCode = activationCode,
+            isMuted = isMuted,
+            onToggleMute = { viewModel.toggleMute() },
             viewModel = viewModel
         )
     }
@@ -139,6 +142,8 @@ fun MainConversationContent(
     onShowSettings: () -> Unit,
     showActivationDialog: Boolean,
     activationCode: String?,
+    isMuted: Boolean,
+    onToggleMute: () -> Unit,
     viewModel: ConversationViewModel
 ) {
 
@@ -216,24 +221,14 @@ fun MainConversationContent(
 
                     // 右侧：功能按钮
                     Row {
-                        // 通话按钮
-                        // IconButton(
-                        //     onClick = {
-                        //         if (state == ConversationState.IDLE) {
-                        //             viewModel.startListening()
-                        //         } else {
-                        //             viewModel.stopListening()
-                        //         }
-                        //     },
-                        //     enabled = isConnected && hasPermissions
-                        // ) {
-                        //     Icon(
-                        //         Icons.Default.Call,
-                        //         contentDescription = if (state == ConversationState.LISTENING) "结束通话" else "开始通话",
-                        //         tint = if (state == ConversationState.LISTENING)
-                        //             DarkColorScheme.error else DarkColorScheme.onPrimary
-                        //     )
-                        // }
+                        // 静音按钮
+                        IconButton(onClick = onToggleMute) {
+                            Icon(
+                                if (isMuted) Icons.Default.Clear else Icons.Default.Check,
+                                contentDescription = if (isMuted) "取消静音" else "静音",
+                                tint = if (isMuted) DarkColorScheme.error else DarkColorScheme.onPrimary
+                            )
+                        }
 
                         // 设置按钮
                         IconButton(onClick = onShowSettings) {
