@@ -18,6 +18,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import com.xiaozhi.ai.R
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
@@ -236,7 +248,8 @@ fun MainConversationContent(
                     },
                     state = state,
                     isConnected = isConnected,
-                    hasPermissions = hasPermissions
+                    hasPermissions = hasPermissions,
+                    viewModel = viewModel
                 )
             }
         }
@@ -457,7 +470,8 @@ fun ModernBottomInputArea(
     onSendText: () -> Unit,
     state: ConversationState,
     isConnected: Boolean,
-    hasPermissions: Boolean
+    hasPermissions: Boolean,
+    viewModel: ConversationViewModel
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -536,44 +550,14 @@ fun ModernBottomInputArea(
                 }
             }
 
-            // 输入区域
-            // 文本输入框
-            OutlinedTextField(
-                value = textInput,
-                onValueChange = onTextChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .onKeyEvent { keyEvent ->
-                        if (keyEvent.key == Key.Enter && textInput.isNotBlank() && isConnected) {
-                            onSendText()
-                            true
-                        } else {
-                            false
-                        }
-                    },
-                placeholder = {
-                    Text(
-                        "发消息或按住说话",
-                        color = DarkColorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                    )
-                },
-                maxLines = 4,
-                enabled = isConnected,
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = DarkColorScheme.primary,
-                    unfocusedBorderColor = DarkColorScheme.outline.copy(alpha = 0.3f)
-                ),
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Send
-                ),
-                keyboardActions = KeyboardActions(
-                    onSend = {
-                        if (textInput.isNotBlank() && isConnected) {
-                            onSendText()
-                        }
-                    }
-                )
+            // 输入区域 - 新的语音输入组件
+            VoiceInputField(
+                textInput = textInput,
+                onTextChange = onTextChange,
+                onSendText = onSendText,
+                isConnected = isConnected,
+                hasPermissions = hasPermissions,
+                viewModel = viewModel
             )
 
             // 权限提示
@@ -585,6 +569,148 @@ fun ModernBottomInputArea(
                     fontSize = 12.sp,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun VoiceInputField(
+    textInput: String,
+    onTextChange: (String) -> Unit,
+    onSendText: () -> Unit,
+    isConnected: Boolean,
+    hasPermissions: Boolean,
+    viewModel: ConversationViewModel
+) {
+    var isInputMode by remember { mutableStateOf(false) }
+    var isPressed by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    var longPressJob by remember { mutableStateOf<Job?>(null) }
+    val focusRequester = remember { FocusRequester() }
+
+    // 监听键盘状态
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val isKeyboardOpen by rememberUpdatedState(WindowInsets.ime.getBottom(LocalDensity.current) > 0)
+
+    // 当键盘隐藏时，自动切换回按钮模式
+    LaunchedEffect(isKeyboardOpen) {
+        if (!isKeyboardOpen && isInputMode) {
+            isInputMode = false
+        }
+    }
+
+    if (isInputMode) {
+        // 输入框模式
+        OutlinedTextField(
+            value = textInput,
+            onValueChange = onTextChange,
+            modifier = Modifier
+                .fillMaxWidth()
+                .onKeyEvent { keyEvent ->
+                    if (keyEvent.key == Key.Enter && textInput.isNotBlank() && isConnected) {
+                        onSendText()
+                        true
+                    } else {
+                        false
+                    }
+                }
+                .focusRequester(focusRequester),
+            placeholder = {
+                Text(
+                    text = if (!isConnected) "未连接到服务器" else "输入消息",
+                    color = if (!isConnected) DarkColorScheme.error else DarkColorScheme.onSurfaceVariant
+                )
+            },
+            maxLines = 4,
+            enabled = isConnected,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = TechLightBlue80,
+                unfocusedBorderColor = DarkColorScheme.outline
+            ),
+            shape = RoundedCornerShape(24.dp),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Send
+            ),
+            keyboardActions = KeyboardActions(
+                onSend = {
+                    if (textInput.isNotBlank() && isConnected) {
+                        onSendText()
+                    }
+                }
+            )
+        )
+
+        // 自动聚焦并显示键盘
+        LaunchedEffect(isInputMode) {
+            if (isInputMode) {
+                focusRequester.requestFocus()
+                keyboardController?.show()
+            }
+        }
+    } else {
+        // 按钮模式
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .background(
+                    color = if (isPressed && hasPermissions) ConnectedGreen else if (isConnected) TechLightBlue80 else DarkColorScheme.surfaceVariant,
+                    shape = RoundedCornerShape(24.dp)
+                )
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onPress = {
+                            if (hasPermissions && isConnected) {
+                                isPressed = true
+                                var isLongPress = false
+
+                                longPressJob = coroutineScope.launch {
+                                    delay(500) // 延迟500ms后开始录音
+                                    if (isPressed) {
+                                        isLongPress = true
+                                        viewModel.startListening()
+                                    }
+                                }
+
+                                val released = tryAwaitRelease()
+                                isPressed = false
+                                longPressJob?.cancel()
+
+                                if (released) {
+                                    if (isLongPress) {
+                                        // 长按录音，停止录音
+                                        if (viewModel.state.value == ConversationState.LISTENING) {
+                                            viewModel.stopListening()
+                                        }
+                                    } else {
+                                        // 短按，切换到输入模式
+                                        isInputMode = true
+                                    }
+                                }
+                            } else {
+                                // 没有权限或未连接时，直接切换到输入模式
+                                val released = tryAwaitRelease()
+                                if (released) {
+                                    isInputMode = true
+                                }
+                            }
+                        }
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = when {
+                        !isConnected -> "未连接到服务器"
+                        isPressed && hasPermissions -> "录音中..."
+                        else -> "输入消息或长按说话"
+                    },
+                    color = Color.White
                 )
             }
         }
