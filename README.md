@@ -14,8 +14,8 @@
 ### 应用界面展示
 
 <div style="display: flex; gap: 20px; align-items: flex-start;">
-  <img src="./screenshot/v1.0/Screenshot_20250704_174534.png" alt="对话" width="200" />
-  <img src="./screenshot/v1.0/Screenshot_20250704_174622.png" alt="设置" width="200" />
+  <img src="./screenshot/v1.2/Screenshot_20250819_164340.png" alt="对话" width="200" />
+  <img src="./screenshot/v1.2/Screenshot_20250819_164429.png" alt="设置" width="200" />
 </div>
 
 ## 使用说明
