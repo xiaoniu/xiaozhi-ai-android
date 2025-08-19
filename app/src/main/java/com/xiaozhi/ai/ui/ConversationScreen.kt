@@ -17,6 +17,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import com.xiaozhi.ai.R
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
@@ -168,55 +170,25 @@ fun MainConversationContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // 左侧：标题和状态
-                    Row {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
                             text = "小智AI",
-                            fontSize = 20.sp,
+                            fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
                             color = DarkColorScheme.onPrimary
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // 连接状态指示器
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(
-                                        color = if (isConnected) ConnectedGreen else ConnectionRed,
-                                        shape = CircleShape
-                                    )
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = when {
-                                    !isConnected -> "未连接"
-                                    state == ConversationState.CONNECTING -> "连接中"
-                                    state == ConversationState.LISTENING -> "聆听中"
-                                    state == ConversationState.PROCESSING -> "处理中"
-                                    state == ConversationState.SPEAKING -> "回复中"
-                                    else -> "已连接"
-                                },
-                                fontSize = 12.sp,
-                                color = DarkColorScheme.onPrimary.copy(alpha = 0.8f)
-                            )
-                            // 重连按钮（仅在未连接时显示）
-                            if (!isConnected) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                IconButton(
-                                    onClick = { viewModel.reconnect() },
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Default.Refresh,
-                                        contentDescription = "重连",
-                                        modifier = Modifier.size(16.dp),
-                                        tint = DarkColorScheme.onPrimary
-                                    )
-                                }
-                            }
-                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        // 连接状态指示器
+                        Icon(
+                            painter = painterResource(
+                                id = if (isConnected) R.drawable.cloud_on else R.drawable.cloud_disabled
+                            ),
+                            contentDescription = if (isConnected) "已连接" else "未连接",
+                            modifier = Modifier.size(16.dp),
+                            tint = if (isConnected) ConnectedGreen else ConnectionRed
+                        )
                     }
 
                     // 右侧：功能按钮
@@ -224,17 +196,21 @@ fun MainConversationContent(
                         // 静音按钮
                         IconButton(onClick = onToggleMute) {
                             Icon(
-                                if (isMuted) Icons.Default.Clear else Icons.Default.Check,
+                                painter = painterResource(
+                                    id = if (isMuted) R.drawable.volume_off else R.drawable.volume_up
+                                ),
+                                modifier = Modifier.size(24.dp),
                                 contentDescription = if (isMuted) "取消静音" else "静音",
-                                tint = if (isMuted) DarkColorScheme.error else DarkColorScheme.onPrimary
+                                tint = DarkColorScheme.onPrimary
                             )
                         }
 
                         // 设置按钮
                         IconButton(onClick = onShowSettings) {
                             Icon(
-                                Icons.Default.Settings,
+                                painter = painterResource(id = R.drawable.settings),
                                 contentDescription = "设置",
+                                modifier = Modifier.size(24.dp),
                                 tint = DarkColorScheme.onPrimary
                             )
                         }
@@ -327,7 +303,7 @@ fun MainConversationContent(
             }
         }
     }
-    
+
     // 激活弹窗
     if (showActivationDialog && activationCode != null) {
         AlertDialog(
