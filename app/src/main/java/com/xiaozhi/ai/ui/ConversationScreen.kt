@@ -553,13 +553,13 @@ fun ModernBottomInputArea(
                     },
                 placeholder = {
                     Text(
-                        "输入消息...",
+                        "发消息或按住说话",
                         color = DarkColorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                 },
                 maxLines = 4,
                 enabled = isConnected,
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = DarkColorScheme.primary,
                     unfocusedBorderColor = DarkColorScheme.outline.copy(alpha = 0.3f)

@@ -523,7 +523,7 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
             return
         }
         // 发送唤醒词检测消息
-        webSocketManager.sendWakeWordDetected(text)
+        webSocketManager.sendTextRequest(text)
         _state.value = ConversationState.PROCESSING
         Log.d(TAG, "发送文本消息: $text")
     }
@@ -533,7 +533,7 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
      */
     private fun sendInitializationMessage() {
         // 发送"初始化"文本消息，但不添加到对话列表
-        webSocketManager.sendWakeWordDetected("初始化")
+        webSocketManager.sendTextRequest("初始化")
         Log.d(TAG, "发送设备初始化消息")
     }
 
