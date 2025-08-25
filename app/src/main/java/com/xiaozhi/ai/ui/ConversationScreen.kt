@@ -550,15 +550,45 @@ fun ModernBottomInputArea(
                 }
             }
 
-            // 输入区域 - 新的语音输入组件
-            VoiceInputField(
-                textInput = textInput,
-                onTextChange = onTextChange,
-                onSendText = onSendText,
-                isConnected = isConnected,
-                hasPermissions = hasPermissions,
-                viewModel = viewModel
-            )
+            // 输入区域 - 新的语音输入组件和圆形按钮
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // 语音输入组件
+                VoiceInputField(
+                    textInput = textInput,
+                    onTextChange = onTextChange,
+                    onSendText = onSendText,
+                    isConnected = isConnected,
+                    hasPermissions = hasPermissions,
+                    viewModel = viewModel,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                // 右侧圆形按钮
+                IconButton(
+                    onClick = {
+                        // 这里可以添加按钮点击事件
+                        // 例如：打开更多选项、发送表情等
+                    },
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            color = TechLightBlue80,
+                            shape = CircleShape
+                        )
+                        .clip(CircleShape)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.call),
+                        contentDescription = "打电话",
+                        modifier = Modifier.size(32.dp),
+                        tint = Color.White
+                    )
+                }
+            }
 
             // 权限提示
             if (!hasPermissions) {
@@ -582,7 +612,8 @@ fun VoiceInputField(
     onSendText: () -> Unit,
     isConnected: Boolean,
     hasPermissions: Boolean,
-    viewModel: ConversationViewModel
+    viewModel: ConversationViewModel,
+    modifier: Modifier = Modifier
 ) {
     var isInputMode by remember { mutableStateOf(false) }
     var isPressed by remember { mutableStateOf(false) }
@@ -606,7 +637,7 @@ fun VoiceInputField(
         OutlinedTextField(
             value = textInput,
             onValueChange = onTextChange,
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .onKeyEvent { keyEvent ->
                     if (keyEvent.key == Key.Enter && textInput.isNotBlank() && isConnected) {
@@ -652,7 +683,7 @@ fun VoiceInputField(
     } else {
         // 按钮模式
         Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .height(56.dp)
                 .background(
