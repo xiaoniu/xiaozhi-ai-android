@@ -34,4 +34,5 @@ https://api.tenclass.net/xiaozhi/ota/
 - [API通信协议](./doc/api.md) - WebSocket通信协议详细说明
 - [对话流程](./doc/flow.md) - 对话流程实现和状态管理
 - [MCP协议](./doc/mcp.md) - MCP工具调用协议
-- [OTA接口文档](./doc/OTA%20接口文档.pdf) - OTA接口文档
+- [OTA接口文档](./doc/OTA%20接口文档.pdf) - OTA接口文档（[线上版](https://ccnphfhqs21z.feishu.cn/wiki/FjW6wZmisimNBBkov6OcmfvknVd)）
+- [通信协议：Websocket连接](./doc/通信协议：Websocket%20连接.pdf.pdf) - 通信协议：Websocket连接（[线上版](https://ccnphfhqs21z.feishu.cn/wiki/M0XiwldO9iJwHikpXD5cEx71nKh)）
