@@ -499,6 +499,24 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     }
 
     /**
+     * 取消当前录音并发送中止信号（可选原因）
+     * 用于上滑取消等场景：立即停止录音、停止Opus数据传输，并发送 type=abort 给服务器。
+     */
+    fun cancelListeningWithAbort(reason: String = "user_interrupt") {
+        // 将状态置为IDLE，确保 handleAudioEvent 不再发送后续音频帧
+        if (_state.value == ConversationState.LISTENING) {
+            _state.value = ConversationState.IDLE
+        }
+        // 停止录音，确保底层不再采集与编码音频
+        audioManager.stopRecording()
+
+        // 发送中止信号到服务器，包含 session_id 与原因
+        webSocketManager.sendAbort(reason)
+
+        Log.d(TAG, "取消录音并发送中止: $reason")
+    }
+
+    /**
      * 开始下一轮对话（自动模式）
      */
     private fun startNextRound() {

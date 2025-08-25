@@ -1,8 +1,9 @@
 package com.xiaozhi.ai.ui
 
 import androidx.compose.animation.*
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,8 +19,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.changedToUp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -49,7 +50,6 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.xiaozhi.ai.data.ConfigManager
 import com.xiaozhi.ai.data.Message
 import com.xiaozhi.ai.data.MessageRole
-import com.xiaozhi.ai.data.XiaozhiConfig
 import com.xiaozhi.ai.ui.theme.ConnectedGreen
 import com.xiaozhi.ai.ui.theme.ConnectionRed
 import com.xiaozhi.ai.ui.theme.DarkColorScheme
@@ -621,6 +621,10 @@ fun VoiceInputField(
     var longPressJob by remember { mutableStateOf<Job?>(null) }
     val focusRequester = remember { FocusRequester() }
 
+    // 新增：长按录音提示与取消提示状态
+    var showRecordingHint by remember { mutableStateOf(false) }
+    var showCancelHint by remember { mutableStateOf(false) }
+
     // 监听键盘状态
     val keyboardController = LocalSoftwareKeyboardController.current
     val isKeyboardOpen by rememberUpdatedState(WindowInsets.ime.getBottom(LocalDensity.current) > 0)
@@ -681,68 +685,146 @@ fun VoiceInputField(
             }
         }
     } else {
-        // 按钮模式
-        Box(
-            modifier = modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .background(
-                    color = if (isPressed && hasPermissions) ConnectedGreen else if (isConnected) TechLightBlue80 else DarkColorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(24.dp)
-                )
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onPress = {
-                            if (hasPermissions && isConnected) {
+        // 新增：外层使用 Column，在按钮上方显示提示
+        val density = LocalDensity.current
+        val cancelThresholdPx = with(density) { 80.dp.toPx() } // 上滑阈值
+
+        Column(modifier = modifier.fillMaxWidth()) {
+            // 录音提示气泡
+            AnimatedVisibility(visible = showRecordingHint) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            color = if (showCancelHint) ConnectionRed.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.7f)
+                        )
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (showCancelHint) "松开取消" else "松开发送，上滑取消",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            // 按钮模式
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .background(
+                        color = when {
+                            showCancelHint -> ConnectionRed
+                            isPressed && hasPermissions -> ConnectedGreen
+                            isConnected -> TechLightBlue80
+                            else -> DarkColorScheme.surfaceVariant
+                        },
+                        shape = RoundedCornerShape(24.dp)
+                    )
+                    .pointerInput(hasPermissions, isConnected) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown()
+                            if (!hasPermissions || !isConnected) {
+                                // 无权限/未连接：短按进入输入模式
                                 isPressed = true
-                                var isLongPress = false
-
-                                longPressJob = coroutineScope.launch {
-                                    delay(500) // 延迟500ms后开始录音
-                                    if (isPressed) {
-                                        isLongPress = true
-                                        viewModel.startListening()
-                                    }
-                                }
-
-                                val released = tryAwaitRelease()
+                                val released = down.pressed
+                                // 等待抬起
+                                do {
+                                  val e = awaitPointerEvent()
+                                  val ch = e.changes.firstOrNull { it.id == down.id }
+                                } while (ch != null && ch.pressed)
                                 isPressed = false
-                                longPressJob?.cancel()
+                                isInputMode = true
+                                return@awaitEachGesture
+                            }
 
-                                if (released) {
-                                    if (isLongPress) {
-                                        // 长按录音，停止录音
-                                        if (viewModel.state.value == ConversationState.LISTENING) {
-                                            viewModel.stopListening()
-                                        }
-                                    } else {
-                                        // 短按，切换到输入模式
-                                        isInputMode = true
-                                    }
+                            // 有权限且已连接：支持长按录音与上滑取消
+                            isPressed = true
+                            showCancelHint = false
+                            var longPressed = false
+                            var canceledBySwipeUp = false
+                            val startY = down.position.y
+
+                            longPressJob?.cancel()
+                            longPressJob = coroutineScope.launch {
+                                delay(500)
+                                if (isPressed) {
+                                  longPressed = true
+                                  showRecordingHint = true
+                                  // 开始录音
+                                  viewModel.startListening()
                                 }
-                            } else {
-                                // 没有权限或未连接时，直接切换到输入模式
-                                val released = tryAwaitRelease()
-                                if (released) {
+                            }
+
+                            // 监听移动/抬起
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                val change = event.changes.firstOrNull { it.id == down.id } ?: continue
+
+                                // 长按后检查上滑取消
+                                if (longPressed) {
+                                  val dy = change.position.y - startY
+                                  val shouldCancel = dy < -cancelThresholdPx
+                                  if (shouldCancel && !canceledBySwipeUp) {
+                                    canceledBySwipeUp = true
+                                    showCancelHint = true
+                                    // 立即取消录音与传输
+                                    try {
+                                      viewModel.cancelListeningWithAbort("wake_word_detected")
+                                    } catch (t: Throwable) {
+                                      // 忽略UI层异常，确保不崩溃
+                                    }
+                                  } else if (!shouldCancel && canceledBySwipeUp) {
+                                    // 回到阈值内，取消提示
+                                    showCancelHint = false
+                                  }
+                                }
+
+                                if (change.changedToUp()) {
+                                  // 结束本次手势
+                                  isPressed = false
+                                  longPressJob?.cancel()
+
+                                  if (longPressed) {
+                                    // 已经进入录音
+                                    if (!canceledBySwipeUp) {
+                                      // 正常松开 -> 结束录音并发送
+                                      if (viewModel.state.value == ConversationState.LISTENING) {
+                                        viewModel.stopListening()
+                                      }
+                                    }
+                                  } else {
+                                    // 短按 -> 切换输入模式
                                     isInputMode = true
+                                  }
+
+                                  // 收尾UI
+                                  showRecordingHint = false
+                                  showCancelHint = false
+                                  break
                                 }
                             }
                         }
-                    )
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = when {
-                        !isConnected -> "未连接到服务器"
-                        isPressed && hasPermissions -> "录音中..."
-                        else -> "输入消息或长按说话"
                     },
-                    color = Color.White
-                )
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = when {
+                            !isConnected -> "未连接到服务器"
+                            isPressed && hasPermissions -> "录音中..."
+                            else -> "输入消息或长按说话"
+                        },
+                        color = Color.White
+                    )
+                }
             }
         }
     }
