@@ -12,16 +12,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.CameraAlt
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material3.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.changedToUp
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -35,11 +41,13 @@ import com.xiaozhi.ai.R
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import com.xiaozhi.ai.ui.theme.TechLightBlue80
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -165,65 +173,58 @@ fun MainConversationContent(
         modifier = Modifier
             .fillMaxSize()
             .navigationBarsPadding(),
-        containerColor = DarkColorScheme.background,
+        containerColor = Color.White, // 设置背景为白色
         topBar = {
-            // 沉浸式顶部标题栏
+            // 顶部标题栏
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = DarkColorScheme.primary,
+                color = Color.White, // 白色背景
                 shadowElevation = 0.dp
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .statusBarsPadding() // 添加状态栏高度的padding
-                        .padding(horizontal = 16.dp, vertical = 4.dp), // 减小垂直padding
+                        .statusBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 左侧：标题和状态
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "小智AI",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DarkColorScheme.onPrimary
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        // 连接状态指示器
-                        Icon(
-                            painter = painterResource(
-                                id = if (isConnected) R.drawable.cloud_on else R.drawable.cloud_disabled
-                            ),
-                            contentDescription = if (isConnected) "已连接" else "未连接",
-                            modifier = Modifier.size(16.dp),
-                            tint = if (isConnected) ConnectedGreen else ConnectionRed
-                        )
-                    }
+                    // 左侧：留空
+                    Spacer(modifier = Modifier.width(48.dp))
 
                     // 右侧：功能按钮
-                    Row {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // 历史记录按钮 (替换原来的设置按钮位置，暂时映射到设置功能)
+                        IconButton(
+                            onClick = onShowSettings,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.Transparent, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.History,
+                                contentDescription = "历史记录",
+                                modifier = Modifier.size(24.dp),
+                                tint = Color(0xFF1F2937) // Gray 900
+                            )
+                        }
+
                         // 静音按钮
-                        IconButton(onClick = onToggleMute) {
+                        IconButton(
+                            onClick = onToggleMute,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.Transparent, CircleShape)
+                        ) {
                             Icon(
                                 painter = painterResource(
                                     id = if (isMuted) R.drawable.volume_off else R.drawable.volume_up
                                 ),
                                 modifier = Modifier.size(24.dp),
                                 contentDescription = if (isMuted) "取消静音" else "静音",
-                                tint = DarkColorScheme.onPrimary
-                            )
-                        }
-
-                        // 设置按钮
-                        IconButton(onClick = onShowSettings) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.settings),
-                                contentDescription = "设置",
-                                modifier = Modifier.size(24.dp),
-                                tint = DarkColorScheme.onPrimary
+                                tint = Color(0xFF1F2937) // Gray 900
                             )
                         }
                     }
@@ -233,11 +234,11 @@ fun MainConversationContent(
         bottomBar = {
             Column(
                 modifier = Modifier
-                    .imePadding() // 关键：处理键盘插入
-                    .navigationBarsPadding() // 处理导航栏
+                    .imePadding()
+                    .navigationBarsPadding()
             ) {
-                // 简约的底部输入区域
-                ModernBottomInputArea(
+                // 底部输入区域
+                PrototypeBottomInputArea(
                     textInput = textInput,
                     onTextChange = onTextInputChange,
                     onSendText = {
@@ -260,14 +261,15 @@ fun MainConversationContent(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // 简洁的错误消息显示
+            // 错误消息显示
             errorMessage?.let { error ->
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = TechLightBlue80,
-                    shape = RoundedCornerShape(8.dp)
+                    color = Color(0xFFFEF2F2), // Light Red
+                    shape = RoundedCornerShape(8.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFECACA))
                 ) {
                     Row(
                         modifier = Modifier.padding(12.dp),
@@ -276,13 +278,13 @@ fun MainConversationContent(
                         Icon(
                             Icons.Default.Warning,
                             contentDescription = null,
-                            tint = DarkColorScheme.primary,
+                            tint = Color(0xFFDC2626),
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = error,
-                            color = DarkColorScheme.primary,
+                            color = Color(0xFFDC2626),
                             modifier = Modifier.weight(1f),
                             fontSize = 14.sp
                         )
@@ -293,7 +295,7 @@ fun MainConversationContent(
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = "关闭",
-                                tint = DarkColorScheme.error,
+                                tint = Color(0xFFDC2626),
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -307,8 +309,8 @@ fun MainConversationContent(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(messages) { message ->
                     MessageItem(message = message)
@@ -389,14 +391,14 @@ fun MessageItem(message: Message) {
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(DarkColorScheme.primary),
+                    .background(Color.White), // 确保头像背景清晰
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "AI",
-                    color = DarkColorScheme.onPrimary,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
+                 Icon(
+                    painter = painterResource(id = R.drawable.ic_launcher_foreground), // 使用应用图标
+                    contentDescription = null,
+                    tint = Color.Unspecified, // 保持原色
+                    modifier = Modifier.size(32.dp)
                 )
             }
             Spacer(modifier = Modifier.width(8.dp))
@@ -407,33 +409,34 @@ fun MessageItem(message: Message) {
         ) {
             Surface(
                 color = if (isUser)
-                    DarkColorScheme.primary
+                    Color(0xFF3B82F6) // Blue 500
                 else
-                    DarkColorScheme.surfaceVariant,
+                    Color.White,
                 shape = RoundedCornerShape(
                     topStart = 18.dp,
                     topEnd = 18.dp,
-                    bottomStart = if (isUser) 18.dp else 6.dp,
-                    bottomEnd = if (isUser) 6.dp else 18.dp
+                    bottomStart = if (isUser) 18.dp else 2.dp,
+                    bottomEnd = if (isUser) 2.dp else 18.dp
                 ),
-                shadowElevation = 2.dp
+                shadowElevation = 1.dp,
+                border = if (!isUser) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E7EB)) else null // Gray 200 border for AI
             ) {
                 Text(
                     text = message.content,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
                     color = if (isUser)
-                        DarkColorScheme.onPrimary
+                        Color.White
                     else
-                        DarkColorScheme.onSurfaceVariant,
-                    fontSize = 14.sp,
-                    lineHeight = 20.sp
+                        Color(0xFF1F2937), // Gray 900
+                    fontSize = 15.sp,
+                    lineHeight = 22.sp
                 )
             }
 
             Text(
                 text = timeFormat.format(Date(message.timestamp)),
                 fontSize = 10.sp,
-                color = DarkColorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                color = Color(0xFF9CA3AF), // Gray 400
                 modifier = Modifier.padding(
                     start = if (isUser) 0.dp else 8.dp,
                     end = if (isUser) 8.dp else 0.dp,
@@ -444,18 +447,18 @@ fun MessageItem(message: Message) {
 
         if (isUser) {
             Spacer(modifier = Modifier.width(8.dp))
-            // 用户头像 - 更小更简洁
+            // 用户头像
             Box(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(DarkColorScheme.secondary),
+                    .background(Color(0xFFE5E7EB)), // Gray 200
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
-                    tint = DarkColorScheme.onSecondary,
+                    tint = Color(0xFF6B7280), // Gray 500
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -464,7 +467,7 @@ fun MessageItem(message: Message) {
 }
 
 @Composable
-fun ModernBottomInputArea(
+fun PrototypeBottomInputArea(
     textInput: String,
     onTextChange: (String) -> Unit,
     onSendText: () -> Unit,
@@ -473,15 +476,26 @@ fun ModernBottomInputArea(
     hasPermissions: Boolean,
     viewModel: ConversationViewModel
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = DarkColorScheme.surface,
-        shadowElevation = 8.dp
+    // 底部背景：白色渐变到透明（这里简化为白色背景，上方有一点阴影或渐变）
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.0f),
+                        Color.White
+                    ),
+                    startY = 0f,
+                    endY = 50f
+                )
+            )
+            .padding(bottom = 16.dp, start = 16.dp, end = 16.dp, top = 8.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 状态指示器 - 更简洁
+            // 状态指示器
             AnimatedVisibility(
                 visible = state != ConversationState.IDLE,
                 enter = slideInVertically() + fadeIn(),
@@ -499,333 +513,194 @@ fun ModernBottomInputArea(
                             Box(
                                 modifier = Modifier
                                     .size(8.dp)
-                                    .background(
-                                        DarkColorScheme.error,
-                                        CircleShape
-                                    )
+                                    .background(Color(0xFFEF4444), CircleShape) // Red 500
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "正在聆听",
-                                color = DarkColorScheme.error,
+                                text = "正在聆听...",
+                                color = Color(0xFFEF4444),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )
                         }
-
                         ConversationState.PROCESSING -> {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
                                 strokeWidth = 2.dp,
-                                color = DarkColorScheme.primary
+                                color = Color(0xFF1F2937)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "处理中",
+                                text = "思考中...",
+                                color = Color(0xFF1F2937),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )
                         }
-
                         ConversationState.SPEAKING -> {
                             Box(
                                 modifier = Modifier
                                     .size(8.dp)
-                                    .background(
-                                        DarkColorScheme.primary,
-                                        CircleShape
-                                    )
+                                    .background(Color(0xFF1F2937), CircleShape)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "小智回复中",
-                                color = DarkColorScheme.primary,
+                                text = "正在回复...",
+                                color = Color(0xFF1F2937),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium
                             )
                         }
-
                         else -> {}
                     }
                 }
             }
 
-            // 输入区域 - 新的语音输入组件和圆形按钮
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+            // 药丸形输入栏
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .shadow(8.dp, CircleShape, spotColor = Color(0x14000000)),
+                shape = CircleShape,
+                color = Color.White,
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF3F4F6))
             ) {
-                // 语音输入组件
-                VoiceInputField(
-                    textInput = textInput,
-                    onTextChange = onTextChange,
-                    onSendText = onSendText,
-                    isConnected = isConnected,
-                    hasPermissions = hasPermissions,
-                    viewModel = viewModel,
-                    modifier = Modifier.weight(1f)
-                )
-                
-                // 右侧圆形按钮
-                IconButton(
-                    onClick = {
-                        // 这里可以添加按钮点击事件
-                        // 例如：打开更多选项、发送表情等
-                    },
+                Row(
                     modifier = Modifier
-                        .size(56.dp)
-                        .background(
-                            color = TechLightBlue80,
-                            shape = CircleShape
-                        )
-                        .clip(CircleShape)
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.call),
-                        contentDescription = "打电话",
-                        modifier = Modifier.size(32.dp),
-                        tint = Color.White
-                    )
-                }
-            }
+                    // 左侧相机按钮
+                    IconButton(
+                        onClick = { /* TODO: Camera action */ },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.Transparent, CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.CameraAlt,
+                            contentDescription = "相机",
+                            tint = Color(0xFF1F2937), // Gray 900
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
 
-            // 权限提示
-            if (!hasPermissions) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "需要录音权限才能使用语音功能",
-                    color = DarkColorScheme.error,
-                    fontSize = 12.sp,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
+                    // 中间输入框
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 8.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        if (textInput.isEmpty()) {
+                            Text(
+                                text = "发消息或按住说话...",
+                                color = Color(0xFF9CA3AF), // Gray 400
+                                fontSize = 15.sp
+                            )
+                        }
+                        BasicTextField(
+                            value = textInput,
+                            onValueChange = onTextChange,
+                            textStyle = TextStyle(
+                                color = Color(0xFF374151), // Gray 700
+                                fontSize = 15.sp
+                            ),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                            keyboardActions = KeyboardActions(onSend = { onSendText() }),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    // 右侧按钮组
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        // 语音按钮 (带长按逻辑)
+                        VoiceActionButton(
+                            isConnected = isConnected,
+                            hasPermissions = hasPermissions,
+                            viewModel = viewModel
+                        )
+
+                        // 加号按钮
+                        IconButton(
+                            onClick = { /* TODO: More actions */ },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(Color.Transparent, CircleShape)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Add,
+                                contentDescription = "更多",
+                                tint = Color(0xFF1F2937),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-fun VoiceInputField(
-    textInput: String,
-    onTextChange: (String) -> Unit,
-    onSendText: () -> Unit,
+fun VoiceActionButton(
     isConnected: Boolean,
     hasPermissions: Boolean,
-    viewModel: ConversationViewModel,
-    modifier: Modifier = Modifier
+    viewModel: ConversationViewModel
 ) {
-    var isInputMode by remember { mutableStateOf(false) }
-    var isPressed by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    var isPressed by remember { mutableStateOf(false) }
     var longPressJob by remember { mutableStateOf<Job?>(null) }
-    val focusRequester = remember { FocusRequester() }
 
-    // 新增：长按录音提示与取消提示状态
-    var showRecordingHint by remember { mutableStateOf(false) }
-    var showCancelHint by remember { mutableStateOf(false) }
-
-    // 监听键盘状态
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val isKeyboardOpen by rememberUpdatedState(WindowInsets.ime.getBottom(LocalDensity.current) > 0)
-
-    // 当键盘隐藏时，自动切换回按钮模式
-    LaunchedEffect(isKeyboardOpen) {
-        if (!isKeyboardOpen && isInputMode) {
-            isInputMode = false
-        }
-    }
-
-    if (isInputMode) {
-        // 输入框模式
-        OutlinedTextField(
-            value = textInput,
-            onValueChange = onTextChange,
-            modifier = modifier
-                .fillMaxWidth()
-                .onKeyEvent { keyEvent ->
-                    if (keyEvent.key == Key.Enter && textInput.isNotBlank() && isConnected) {
-                        onSendText()
-                        true
-                    } else {
-                        false
-                    }
-                }
-                .focusRequester(focusRequester),
-            placeholder = {
-                Text(
-                    text = if (!isConnected) "未连接到服务器" else "输入消息",
-                    color = if (!isConnected) DarkColorScheme.error else DarkColorScheme.onSurfaceVariant
-                )
-            },
-            maxLines = 4,
-            enabled = isConnected,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = TechLightBlue80,
-                unfocusedBorderColor = DarkColorScheme.outline
-            ),
-            shape = RoundedCornerShape(24.dp),
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Send
-            ),
-            keyboardActions = KeyboardActions(
-                onSend = {
-                    if (textInput.isNotBlank() && isConnected) {
-                        onSendText()
-                    }
-                }
+    // 录音按钮
+    IconButton(
+        onClick = { /* Click handled by pointerInput below for consistency */ },
+        modifier = Modifier
+            .size(40.dp)
+            .background(
+                if (isPressed) Color(0xFFF3F4F6) else Color.Transparent,
+                CircleShape
             )
-        )
-
-        // 自动聚焦并显示键盘
-        LaunchedEffect(isInputMode) {
-            if (isInputMode) {
-                focusRequester.requestFocus()
-                keyboardController?.show()
-            }
-        }
-    } else {
-        // 新增：外层使用 Column，在按钮上方显示提示
-        val density = LocalDensity.current
-        val cancelThresholdPx = with(density) { 80.dp.toPx() } // 上滑阈值
-
-        Column(modifier = modifier.fillMaxWidth()) {
-            // 录音提示气泡
-            AnimatedVisibility(visible = showRecordingHint) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(
-                            color = if (showCancelHint) ConnectionRed.copy(alpha = 0.9f) else Color.Black.copy(alpha = 0.7f)
-                        )
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = if (showCancelHint) "松开取消" else "松开发送，上滑取消",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            // 按钮模式
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .background(
-                        color = when {
-                            showCancelHint -> ConnectionRed
-                            isPressed && hasPermissions -> ConnectedGreen
-                            isConnected -> TechLightBlue80
-                            else -> DarkColorScheme.surfaceVariant
-                        },
-                        shape = RoundedCornerShape(24.dp)
-                    )
-                    .pointerInput(hasPermissions, isConnected) {
-                        awaitEachGesture {
-                            val down = awaitFirstDown()
-                            if (!hasPermissions || !isConnected) {
-                                // 无权限/未连接：短按进入输入模式
-                                isPressed = true
-                                val released = down.pressed
-                                // 等待抬起
-                                do {
-                                  val e = awaitPointerEvent()
-                                  val ch = e.changes.firstOrNull { it.id == down.id }
-                                } while (ch != null && ch.pressed)
-                                isPressed = false
-                                isInputMode = true
-                                return@awaitEachGesture
-                            }
-
-                            // 有权限且已连接：支持长按录音与上滑取消
-                            isPressed = true
-                            showCancelHint = false
-                            var longPressed = false
-                            var canceledBySwipeUp = false
-                            val startY = down.position.y
-
-                            longPressJob?.cancel()
-                            longPressJob = coroutineScope.launch {
-                                delay(500)
-                                if (isPressed) {
-                                  longPressed = true
-                                  showRecordingHint = true
-                                  // 开始录音
-                                  viewModel.startListening()
-                                }
-                            }
-
-                            // 监听移动/抬起
-                            while (true) {
-                                val event = awaitPointerEvent()
-                                val change = event.changes.firstOrNull { it.id == down.id } ?: continue
-
-                                // 长按后检查上滑取消
-                                if (longPressed) {
-                                  val dy = change.position.y - startY
-                                  val shouldCancel = dy < -cancelThresholdPx
-                                  if (shouldCancel && !canceledBySwipeUp) {
-                                    canceledBySwipeUp = true
-                                    showCancelHint = true
-                                    // 立即取消录音与传输
-                                    try {
-                                      viewModel.cancelListeningWithAbort("wake_word_detected")
-                                    } catch (t: Throwable) {
-                                      // 忽略UI层异常，确保不崩溃
-                                    }
-                                  } else if (!shouldCancel && canceledBySwipeUp) {
-                                    // 回到阈值内，取消提示
-                                    showCancelHint = false
-                                  }
-                                }
-
-                                if (change.changedToUp()) {
-                                  // 结束本次手势
-                                  isPressed = false
-                                  longPressJob?.cancel()
-
-                                  if (longPressed) {
-                                    // 已经进入录音
-                                    if (!canceledBySwipeUp) {
-                                      // 正常松开 -> 结束录音并发送
-                                      if (viewModel.state.value == ConversationState.LISTENING) {
-                                        viewModel.stopListening()
-                                      }
-                                    }
-                                  } else {
-                                    // 短按 -> 切换输入模式
-                                    isInputMode = true
-                                  }
-
-                                  // 收尾UI
-                                  showRecordingHint = false
-                                  showCancelHint = false
-                                  break
-                                }
+            .pointerInput(hasPermissions, isConnected) {
+                awaitEachGesture {
+                    val down = awaitFirstDown()
+                    if (hasPermissions && isConnected) {
+                        isPressed = true
+                        var started = false
+                        longPressJob = coroutineScope.launch {
+                            delay(200) // 稍微延迟防误触
+                            if (isPressed) {
+                                viewModel.startListening()
+                                started = true
                             }
                         }
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = when {
-                            !isConnected -> "未连接到服务器"
-                            isPressed && hasPermissions -> "录音中..."
-                            else -> "输入消息或长按说话"
-                        },
-                        color = Color.White
-                    )
+
+                        // 等待抬起
+                        do {
+                            val event = awaitPointerEvent()
+                            // 这里可以添加上滑取消逻辑，为简化暂略
+                        } while (event.changes.any { it.pressed })
+
+                        isPressed = false
+                        longPressJob?.cancel()
+                        if (started) {
+                            viewModel.stopListening()
+                        }
+                    }
                 }
             }
-        }
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Mic,
+            contentDescription = "语音",
+            tint = if (isPressed) Color(0xFF3B82F6) else Color(0xFF1F2937), // Blue 500 when pressed
+            modifier = Modifier.size(20.dp)
+        )
     }
 }
