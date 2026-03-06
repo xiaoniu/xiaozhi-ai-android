@@ -275,48 +275,6 @@ fun MainConversationContent(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // 错误消息显示
-            errorMessage?.let { error ->
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = Color(0xFFFEF2F2), // Light Red
-                    shape = RoundedCornerShape(8.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFECACA))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = Color(0xFFDC2626),
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = error,
-                            color = Color(0xFFDC2626),
-                            modifier = Modifier.weight(1f),
-                            fontSize = 14.sp
-                        )
-                        IconButton(
-                            onClick = { viewModel.clearError() },
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "关闭",
-                                tint = Color(0xFFDC2626),
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
             // 消息列表
             LazyColumn(
                 state = listState,
@@ -509,67 +467,6 @@ fun PrototypeBottomInputArea(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 状态指示器
-            AnimatedVisibility(
-                visible = state != ConversationState.IDLE,
-                enter = slideInVertically() + fadeIn(),
-                exit = slideOutVertically() + fadeOut()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    when (state) {
-                        ConversationState.LISTENING -> {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(Color(0xFFEF4444), CircleShape) // Red 500
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "正在聆听...",
-                                color = Color(0xFFEF4444),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                        ConversationState.PROCESSING -> {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp,
-                                color = Color(0xFF1F2937)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "思考中...",
-                                color = Color(0xFF1F2937),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                        ConversationState.SPEAKING -> {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .background(Color(0xFF1F2937), CircleShape)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "正在回复...",
-                                color = Color(0xFF1F2937),
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                        else -> {}
-                    }
-                }
-            }
-
             // 药丸形输入栏
             Surface(
                 modifier = Modifier
