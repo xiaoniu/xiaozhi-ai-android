@@ -48,6 +48,7 @@ import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.twotone.Menu
 import androidx.compose.ui.text.input.ImeAction
 import com.xiaozhi.ai.ui.theme.TechLightBlue80
 import androidx.compose.ui.platform.LocalContext
@@ -203,6 +204,21 @@ fun MainConversationContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+
+                    IconButton(
+                        onClick = onShowSettings,
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(Color.Transparent, CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = Icons.TwoTone.Menu,
+                            contentDescription = "设置",
+                            modifier = Modifier.size(24.dp),
+                            tint = Color(0xFF1F2937) // Gray 900
+                        )
+                    }
+
                     // 左侧：留空
                     Spacer(modifier = Modifier.width(48.dp))
 
@@ -210,21 +226,6 @@ fun MainConversationContent(
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 历史记录按钮 (替换原来的设置按钮位置，暂时映射到设置功能)
-                        IconButton(
-                            onClick = onShowSettings,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(Color.Transparent, CircleShape)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.History,
-                                contentDescription = "历史记录",
-                                modifier = Modifier.size(24.dp),
-                                tint = Color(0xFF1F2937) // Gray 900
-                            )
-                        }
-
                         // 静音按钮
                         IconButton(
                             onClick = onToggleMute,
@@ -462,7 +463,7 @@ fun PrototypeBottomInputArea(
                     endY = 50f
                 )
             )
-            .padding(bottom = 16.dp, start = 16.dp, end = 16.dp, top = 8.dp)
+            .padding(bottom = 32.dp, start = 16.dp, end = 16.dp, top = 8.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
@@ -471,8 +472,8 @@ fun PrototypeBottomInputArea(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
-                    .shadow(8.dp, CircleShape, spotColor = Color(0x14000000)),
+                    .height(64.dp)
+                    .shadow(12.dp, CircleShape, spotColor = Color(0x46000000)),
                 shape = CircleShape,
                 color = Color.White,
                 border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF3F4F6))
@@ -484,19 +485,19 @@ fun PrototypeBottomInputArea(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // 左侧相机按钮
-                    IconButton(
-                        onClick = { /* TODO: Camera action */ },
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.Transparent, CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.CameraAlt,
-                            contentDescription = "相机",
-                            tint = Color(0xFF1F2937), // Gray 900
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+//                    IconButton(
+//                        onClick = { /* TODO: Camera action */ },
+//                        modifier = Modifier
+//                            .size(40.dp)
+//                            .background(Color.Transparent, CircleShape)
+//                    ) {
+//                        Icon(
+//                            imageVector = Icons.Outlined.CameraAlt,
+//                            contentDescription = "相机",
+//                            tint = Color(0xFF1F2937), // Gray 900
+//                            modifier = Modifier.size(24.dp)
+//                        )
+//                    }
 
                     // 中间输入框
                     Box(
@@ -527,32 +528,32 @@ fun PrototypeBottomInputArea(
                     }
 
                     // 右侧按钮组
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        // 语音按钮 (带长按逻辑)
-                        VoiceActionButton(
-                            isConnected = isConnected,
-                            hasPermissions = hasPermissions,
-                            viewModel = viewModel
-                        )
-
-                        // 加号按钮
-                        IconButton(
-                            onClick = { /* TODO: More actions */ },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(Color.Transparent, CircleShape)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Add,
-                                contentDescription = "更多",
-                                tint = Color(0xFF1F2937),
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
+//                    Row(
+//                        verticalAlignment = Alignment.CenterVertically,
+//                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+//                    ) {
+//                        // 语音按钮 (带长按逻辑)
+//                        VoiceActionButton(
+//                            isConnected = isConnected,
+//                            hasPermissions = hasPermissions,
+//                            viewModel = viewModel
+//                        )
+//
+//                        // 加号按钮
+//                        IconButton(
+//                            onClick = { /* TODO: More actions */ },
+//                            modifier = Modifier
+//                                .size(40.dp)
+//                                .background(Color.Transparent, CircleShape)
+//                        ) {
+//                            Icon(
+//                                imageVector = Icons.Outlined.Add,
+//                                contentDescription = "更多",
+//                                tint = Color(0xFF1F2937),
+//                                modifier = Modifier.size(24.dp)
+//                            )
+//                        }
+//                    }
                 }
             }
         }
