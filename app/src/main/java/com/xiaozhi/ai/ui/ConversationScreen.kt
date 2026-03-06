@@ -1,5 +1,6 @@
 package com.xiaozhi.ai.ui
 
+import android.app.Activity
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -25,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.changedToUp
@@ -32,8 +34,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.ime
+import androidx.core.view.WindowCompat
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -76,6 +80,16 @@ fun ConversationScreen(
     val scope = rememberCoroutineScope()
     val configManager = remember { ConfigManager(context) }
     val configValidator = remember { ConfigValidator(context) }
+
+    // 设置沉浸式状态栏和白色背景
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            window.statusBarColor = Color.Transparent.toArgb() // 设置状态栏透明，配合白色背景
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true // 设置状态栏图标为深色
+        }
+    }
 
     // 权限管理
     val permissionsState = rememberMultiplePermissionsState(
