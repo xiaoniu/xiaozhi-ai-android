@@ -7,7 +7,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +57,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
@@ -63,9 +66,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -213,9 +218,9 @@ private fun MainConversationContent(
                     .fillMaxSize()
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.Top
             ) {
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(60.dp))
                 CenterPanel(state = state, isConnected = isConnected)
             }
 
@@ -281,64 +286,61 @@ private fun TopBar(
     onShowSettings: () -> Unit,
     onToggleMute: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = Color.White.copy(alpha = 0.45f),
-        shadowElevation = 2.dp
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
-        Row(
+        IconButton(
+            onClick = onShowSettings,
             modifier = Modifier
-                .fillMaxWidth()
-                .statusBarsPadding()
-                .padding(horizontal = 20.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .size(36.dp)
+                .align(Alignment.CenterStart)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onShowSettings, modifier = Modifier.size(36.dp)) {
-                    Icon(
-                        imageVector = Icons.Outlined.Settings,
-                        contentDescription = "设置",
-                        tint = AuraPrimary
-                    )
-                }
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    text = "Aura AI",
-                    color = AuraPrimary,
-                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                )
-            }
+            Icon(
+                imageVector = Icons.Outlined.Settings,
+                contentDescription = "设置",
+                tint = AuraPrimary
+            )
+        }
 
-            Surface(
-                shape = CircleShape,
-                color = Color.White.copy(alpha = 0.65f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.75f))
+        Text(
+            text = "Android小智",
+            color = AuraPrimary,
+            style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
+            modifier = Modifier.align(Alignment.Center)
+        )
+
+        Surface(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            shape = CircleShape,
+            color = Color.White.copy(alpha = 0.65f),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.75f))
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Text(
+                    text = "字幕",
+                    color = AuraSubText,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Surface(
+                    modifier = Modifier.size(26.dp),
+                    shape = RoundedCornerShape(6.dp),
+                    color = if (isMuted) Color(0xFFE9E7F3) else Color(0xFFE9E9FF)
                 ) {
-                    Text(
-                        text = "字幕",
-                        color = AuraSubText,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Surface(
-                        modifier = Modifier.size(26.dp),
-                        shape = RoundedCornerShape(6.dp),
-                        color = if (isMuted) Color(0xFFE9E7F3) else Color(0xFFE9E9FF)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            IconButton(onClick = onToggleMute, modifier = Modifier.fillMaxSize()) {
-                                Text(
-                                    text = "CC",
-                                    color = if (isMuted) Color(0xFF7A7583) else AuraPrimary,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                    Box(contentAlignment = Alignment.Center) {
+                        IconButton(onClick = onToggleMute, modifier = Modifier.fillMaxSize()) {
+                            Text(
+                                text = "CC",
+                                color = if (isMuted) Color(0xFF7A7583) else AuraPrimary,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
@@ -403,46 +405,21 @@ private fun CenterPanel(
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(
             modifier = Modifier
-                .size(288.dp)
+                .size(240.dp)
                 .scale(if (state == ConversationState.LISTENING || state == ConversationState.SPEAKING) scale else 1f)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.45f),
-                            Color(0xFFF0E8FF).copy(alpha = 0.68f)
-                        )
-                    ),
-                    shape = CircleShape
-                )
                 .shadow(24.dp, CircleShape, ambientColor = AuraPrimary.copy(alpha = 0.15f))
-                .padding(2.dp)
+                .background(Color.White.copy(alpha = 0.3f), CircleShape)
+                .border(BorderStroke(4.dp, Color.White), CircleShape)
+                .padding(4.dp)
         ) {
-            Box(
+            Image(
+                painter = painterResource(id = com.xiaozhi.ai.R.drawable.doubao),
+                contentDescription = "Doubao",
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.White.copy(alpha = 0.22f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.Bottom) {
-                    val bars = listOf(28.dp, 54.dp, 78.dp, 42.dp, 64.dp)
-                    bars.forEach { h ->
-                        Box(
-                            modifier = Modifier
-                                .width(10.dp)
-                                .height(h)
-                                .background(
-                                    brush = Brush.verticalGradient(
-                                        colors = listOf(
-                                            AuraPrimary.copy(alpha = 0.45f),
-                                            AuraPrimary.copy(alpha = 0.88f)
-                                        )
-                                    ),
-                                    shape = RoundedCornerShape(10.dp)
-                                )
-                        )
-                    }
-                }
-            }
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
         }
 
         Spacer(modifier = Modifier.height(26.dp))
@@ -578,7 +555,7 @@ private fun BottomInputBar(
             .fillMaxWidth()
             .imePadding()
             .padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.Bottom,
+        verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         Surface(
@@ -630,7 +607,7 @@ private fun BottomInputBar(
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Surface(
-                modifier = Modifier.size(82.dp),
+                modifier = Modifier.size(64.dp),
                 shape = CircleShape,
                 color = Color(0xFFBD1620),
                 shadowElevation = 8.dp
