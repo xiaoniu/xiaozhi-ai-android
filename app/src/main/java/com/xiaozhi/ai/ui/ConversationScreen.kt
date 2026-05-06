@@ -1,4 +1,4 @@
-﻿package com.xiaozhi.ai.ui
+package com.xiaozhi.ai.ui
 
 import android.app.Activity
 import androidx.compose.animation.core.RepeatMode
@@ -94,6 +94,7 @@ private val AuraSubText = Color(0xFF6E6A78)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ConversationScreen(
+    onNavigateToSettings: () -> Unit,
     viewModel: ConversationViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -122,10 +123,6 @@ fun ConversationScreen(
     val isMuted by viewModel.isMuted.collectAsState()
 
     var textInput by remember { mutableStateOf("") }
-    var showSettings by remember { mutableStateOf(false) }
-    var currentConfig by remember {
-        mutableStateOf(ConfigManager(context).loadConfig())
-    }
 
     LaunchedEffect(Unit) {
         if (!permissionsState.allPermissionsGranted) {
@@ -133,33 +130,20 @@ fun ConversationScreen(
         }
     }
 
-    if (showSettings) {
-        SettingsScreen(
-            config = currentConfig,
-            onConfigChange = { newConfig ->
-                currentConfig = newConfig
-                ConfigManager(context).saveConfig(newConfig)
-                viewModel.updateConfig(newConfig)
-                showSettings = false
-            },
-            onBack = { showSettings = false }
-        )
-    } else {
-        MainConversationContent(
-            state = state,
-            isConnected = isConnected,
-            textInput = textInput,
-            onTextInputChange = { textInput = it },
-            hasPermissions = permissionsState.allPermissionsGranted,
-            onShowSettings = { showSettings = true },
-            showActivationDialog = showActivationDialog,
-            activationCode = activationCode,
-            isMuted = isMuted,
-            onToggleMute = { viewModel.toggleMute() },
-            errorMessage = errorMessage,
-            viewModel = viewModel
-        )
-    }
+    MainConversationContent(
+        state = state,
+        isConnected = isConnected,
+        textInput = textInput,
+        onTextInputChange = { textInput = it },
+        hasPermissions = permissionsState.allPermissionsGranted,
+        onShowSettings = onNavigateToSettings,
+        showActivationDialog = showActivationDialog,
+        activationCode = activationCode,
+        isMuted = isMuted,
+        onToggleMute = { viewModel.toggleMute() },
+        errorMessage = errorMessage,
+        viewModel = viewModel
+    )
 }
 
 @Composable
