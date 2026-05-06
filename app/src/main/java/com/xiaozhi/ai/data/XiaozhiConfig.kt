@@ -21,7 +21,7 @@ data class XiaozhiConfig(
         fun createDefault(): XiaozhiConfig {
             return XiaozhiConfig(
                 id = "default",
-                name = "测试",
+                name = "Android",
                 otaUrl = "",
                 websocketUrl = "",
                 macAddress = "",

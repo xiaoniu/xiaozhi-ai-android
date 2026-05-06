@@ -55,7 +55,22 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val configManager = remember { ConfigManager(context) }
-    var editedConfig by remember { mutableStateOf(config) }
+    var editedConfig by remember { 
+        mutableStateOf(
+            if (config.otaUrl.isBlank() && config.websocketUrl.isBlank()) {
+                config.copy(
+                    name = "Android",
+                    otaUrl = "https://api.tenclass.net/xiaozhi/ota/",
+                    websocketUrl = "wss://api.tenclass.net/xiaozhi/v1/",
+                    macAddress = (1..6).joinToString(":") {
+                        "%02x".format((0..255).random())
+                    }
+                )
+            } else {
+                config
+            }
+        )
+    }
     var showValidationDialog by remember { mutableStateOf(false) }
     var validationMessage by remember { mutableStateOf("") }
 
@@ -146,7 +161,7 @@ fun SettingsScreen(
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = AethericColors.Background.copy(alpha = 0.8f)
+                        containerColor = Color.Transparent
                     ),
                     modifier = Modifier.statusBarsPadding()
                 )
@@ -229,17 +244,17 @@ fun SettingsScreen(
                             fontWeight = FontWeight.Medium
                         )
                         Text(
-                            "1.设备名称和Token不影响对话",
+                            "1.默认连接小智官方服务",
                             color = AethericColors.OnSurfaceVariant.copy(alpha = 0.5f),
                             fontSize = 12.sp
                         )
                         Text(
-                            "2.Mac地址可随机生成",
+                            "2.设备名称和Token不影响对话",
                             color = AethericColors.OnSurfaceVariant.copy(alpha = 0.5f),
                             fontSize = 12.sp
                         )
                         Text(
-                            "3.OTA地址和WSS地址至少填一个",
+                            "3.Mac地址可随机生成",
                             color = AethericColors.OnSurfaceVariant.copy(alpha = 0.5f),
                             fontSize = 12.sp
                         )
@@ -335,10 +350,10 @@ fun SettingsInput(
             },
             modifier = Modifier.fillMaxWidth(),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = AethericColors.Primary.copy(alpha = 0.5f),
-                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
-                focusedContainerColor = Color.White.copy(alpha = 0.6f),
-                unfocusedContainerColor = Color.White.copy(alpha = 0.2f),
+                focusedBorderColor = AethericColors.Primary,
+                unfocusedBorderColor = AethericColors.OutlineVariant.copy(alpha = 0.5f),
+                focusedContainerColor = Color.White.copy(alpha = 0.9f),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.5f),
                 focusedTextColor = AethericColors.OnSurface,
                 unfocusedTextColor = AethericColors.OnSurface
             ),
