@@ -1,98 +1,112 @@
-package com.xiaozhi.ai.ui
+﻿package com.xiaozhi.ai.ui
 
 import android.app.Activity
-import androidx.compose.animation.*
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.CameraAlt
-import androidx.compose.material.icons.outlined.History
-import androidx.compose.material.icons.outlined.Mic
-import androidx.compose.material3.*
-import androidx.compose.material3.AlertDialog
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.changedToUp
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.ime
-import androidx.core.view.WindowCompat
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import com.xiaozhi.ai.R
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.twotone.Menu
-import androidx.compose.ui.text.input.ImeAction
-import com.xiaozhi.ai.ui.theme.TechLightBlue80
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Keyboard
+import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Videocam
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.xiaozhi.ai.data.ConfigManager
-import com.xiaozhi.ai.data.Message
-import com.xiaozhi.ai.data.MessageRole
-import com.xiaozhi.ai.ui.theme.ConnectedGreen
-import com.xiaozhi.ai.ui.theme.ConnectionRed
-import com.xiaozhi.ai.ui.theme.DarkColorScheme
-import com.xiaozhi.ai.utils.ConfigValidator
 import com.xiaozhi.ai.viewmodel.ConversationState
 import com.xiaozhi.ai.viewmodel.ConversationViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
+private val AuraBgTop = Color(0xFFF8F9FF)
+private val AuraBgBottom = Color(0xFFFBF5FF)
+private val AuraPrimary = Color(0xFF674BB5)
+private val AuraSecondary = Color(0xFF64A8FE)
+private val AuraTertiary = Color(0xFFF170B4)
+private val AuraText = Color(0xFF121C2A)
+private val AuraSubText = Color(0xFF6E6A78)
+
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ConversationScreen(
     viewModel: ConversationViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val configManager = remember { ConfigManager(context) }
-    val configValidator = remember { ConfigValidator(context) }
 
-    // 设置沉浸式状态栏和白色背景
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = Color.Transparent.toArgb() // 设置状态栏透明，配合白色背景
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true // 设置状态栏图标为深色
+            window.statusBarColor = Color.Transparent.toArgb()
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
         }
     }
 
-    // 权限管理
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
             android.Manifest.permission.RECORD_AUDIO,
@@ -100,229 +114,166 @@ fun ConversationScreen(
         )
     )
 
-    // 状态收集
     val state by viewModel.state.collectAsState()
     val isConnected by viewModel.isConnected.collectAsState()
-    val messages by viewModel.messages.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val showActivationDialog by viewModel.showActivationDialog.collectAsState()
     val activationCode by viewModel.activationCode.collectAsState()
     val isMuted by viewModel.isMuted.collectAsState()
 
-    // 文本输入状态和导航状态
     var textInput by remember { mutableStateOf("") }
     var showSettings by remember { mutableStateOf(false) }
     var currentConfig by remember {
-        mutableStateOf(configManager.loadConfig())
-    }
-    val listState = rememberLazyListState()
-
-    // 自动滚动到底部
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
-        }
+        mutableStateOf(ConfigManager(context).loadConfig())
     }
 
-    // 请求权限
     LaunchedEffect(Unit) {
         if (!permissionsState.allPermissionsGranted) {
             permissionsState.launchMultiplePermissionRequest()
         }
     }
 
-    // 显示设置页面或主界面
     if (showSettings) {
         SettingsScreen(
             config = currentConfig,
             onConfigChange = { newConfig ->
                 currentConfig = newConfig
-                configManager.saveConfig(newConfig)
-                // 更新ViewModel中的配置
+                ConfigManager(context).saveConfig(newConfig)
                 viewModel.updateConfig(newConfig)
                 showSettings = false
             },
-            onBack = {
-                showSettings = false
-            }
+            onBack = { showSettings = false }
         )
     } else {
         MainConversationContent(
             state = state,
             isConnected = isConnected,
-            messages = messages,
-            errorMessage = errorMessage,
             textInput = textInput,
             onTextInputChange = { textInput = it },
-            listState = listState,
             hasPermissions = permissionsState.allPermissionsGranted,
             onShowSettings = { showSettings = true },
             showActivationDialog = showActivationDialog,
             activationCode = activationCode,
             isMuted = isMuted,
             onToggleMute = { viewModel.toggleMute() },
+            errorMessage = errorMessage,
             viewModel = viewModel
         )
     }
 }
 
 @Composable
-fun MainConversationContent(
+private fun MainConversationContent(
     state: ConversationState,
     isConnected: Boolean,
-    messages: List<Message>,
-    errorMessage: String?,
     textInput: String,
     onTextInputChange: (String) -> Unit,
-    listState: androidx.compose.foundation.lazy.LazyListState,
     hasPermissions: Boolean,
     onShowSettings: () -> Unit,
     showActivationDialog: Boolean,
     activationCode: String?,
     isMuted: Boolean,
     onToggleMute: () -> Unit,
+    errorMessage: String?,
     viewModel: ConversationViewModel
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .navigationBarsPadding(),
-        containerColor = Color.White, // 设置背景为白色
+        contentWindowInsets = WindowInsets.ime,
+        containerColor = Color.Transparent,
         topBar = {
-            // 顶部标题栏
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = Color.White, // 白色背景
-                shadowElevation = 0.dp
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    IconButton(
-                        onClick = onShowSettings,
-                        modifier = Modifier
-                            .size(40.dp)
-                            .background(Color.Transparent, CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.TwoTone.Menu,
-                            contentDescription = "设置",
-                            modifier = Modifier.size(24.dp),
-                            tint = Color(0xFF1F2937) // Gray 900
-                        )
-                    }
-
-                    // 左侧：留空
-                    Spacer(modifier = Modifier.width(48.dp))
-
-                    // 右侧：功能按钮
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // 静音按钮
-                        IconButton(
-                            onClick = onToggleMute,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(Color.Transparent, CircleShape)
-                        ) {
-                            Icon(
-                                painter = painterResource(
-                                    id = if (isMuted) R.drawable.volume_off else R.drawable.volume_up
-                                ),
-                                modifier = Modifier.size(24.dp),
-                                contentDescription = if (isMuted) "取消静音" else "静音",
-                                tint = Color(0xFF1F2937) // Gray 900
-                            )
-                        }
-                    }
-                }
-            }
+            TopBar(
+                isMuted = isMuted,
+                onShowSettings = onShowSettings,
+                onToggleMute = onToggleMute
+            )
         },
         bottomBar = {
-            Column(
-                modifier = Modifier
-                    .imePadding()
-                    .navigationBarsPadding()
-            ) {
-                // 底部输入区域
-                PrototypeBottomInputArea(
-                    textInput = textInput,
-                    onTextChange = onTextInputChange,
-                    onSendText = {
-                        if (textInput.isNotBlank()) {
-                            viewModel.sendTextMessage(textInput)
-                            onTextInputChange("")
-                        }
-                    },
-                    state = state,
-                    isConnected = isConnected,
-                    hasPermissions = hasPermissions,
-                    viewModel = viewModel
-                )
-            }
+            BottomInputBar(
+                textInput = textInput,
+                onTextChange = onTextInputChange,
+                focusRequester = focusRequester,
+                onKeyboardClick = {
+                    focusRequester.requestFocus()
+                    keyboardController?.show()
+                },
+                onSendText = {
+                    if (textInput.isNotBlank()) {
+                        viewModel.sendTextMessage(textInput)
+                        onTextInputChange("")
+                    }
+                },
+                onHangup = { viewModel.interrupt() }
+            )
         }
-    ) { paddingValues ->
-
-        Column(
+    ) { padding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(AuraBgTop, AuraBgBottom)
+                    )
+                )
+                .padding(padding)
         ) {
-            // 消息列表
-            LazyColumn(
-                state = listState,
+            AuroraDecor()
+
+            Column(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                items(messages) { message ->
-                    MessageItem(message = message)
-                }
+                Spacer(modifier = Modifier.height(20.dp))
+                CenterPanel(state = state, isConnected = isConnected)
+            }
+
+            if (!errorMessage.isNullOrBlank()) {
+                Text(
+                    text = errorMessage,
+                    color = Color(0xFFBA1A1A),
+                    fontSize = 12.sp,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 132.dp, start = 24.dp, end = 24.dp),
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
 
-    // 激活弹窗
     if (showActivationDialog && activationCode != null) {
         AlertDialog(
-            onDismissRequest = { /* 不允许点击外部关闭 */ },
+            onDismissRequest = {},
             title = {
                 Text(
                     text = "设备激活",
-                    fontWeight = FontWeight.Bold,
-                    color = DarkColorScheme.onSurface
+                    color = AuraText,
+                    fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Column {
-                    Text(
-                        text = "激活码：",
-                        color = DarkColorScheme.onSurface,
-                        fontSize = 16.sp
-                    )
+                    Text(text = "激活码：", color = AuraSubText)
                     Spacer(modifier = Modifier.height(8.dp))
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
-                        color = DarkColorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFFF3EEFF)
                     ) {
                         Text(
                             text = activationCode,
                             modifier = Modifier.padding(16.dp),
-                            color = DarkColorScheme.primary,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
+                            color = AuraPrimary,
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -330,230 +281,82 @@ fun MainConversationContent(
             confirmButton = {
                 Button(
                     onClick = { viewModel.onActivationConfirmed() },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = DarkColorScheme.primary
-                    )
+                    colors = ButtonDefaults.buttonColors(containerColor = AuraPrimary)
                 ) {
-                    Text(
-                        text = "我已激活",
-                        color = DarkColorScheme.onPrimary
-                    )
+                    Text("我已激活", color = Color.White)
                 }
             },
-            containerColor = DarkColorScheme.surface,
-            titleContentColor = DarkColorScheme.onSurface,
-            textContentColor = DarkColorScheme.onSurface
+            containerColor = Color(0xFFFDFBFF)
         )
     }
 }
 
 @Composable
-fun MessageItem(message: Message) {
-    val isUser = message.role == MessageRole.USER
-    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
-    ) {
-        if (!isUser) {
-            // AI头像 - 更小更简洁
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(Color.White), // 确保头像背景清晰
-                contentAlignment = Alignment.Center
-            ) {
-                 Icon(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground), // 使用应用图标
-                    contentDescription = null,
-                    tint = Color.Unspecified, // 保持原色
-                    modifier = Modifier.size(32.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-        }
-
-        Column(
-            modifier = Modifier.widthIn(max = 260.dp)
-        ) {
-            Surface(
-                color = if (isUser)
-                    Color(0xFF3B82F6) // Blue 500
-                else
-                    Color.White,
-                shape = RoundedCornerShape(
-                    topStart = 18.dp,
-                    topEnd = 18.dp,
-                    bottomStart = if (isUser) 18.dp else 2.dp,
-                    bottomEnd = if (isUser) 2.dp else 18.dp
-                ),
-                shadowElevation = 1.dp,
-                border = if (!isUser) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFE5E7EB)) else null // Gray 200 border for AI
-            ) {
-                Text(
-                    text = message.content,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                    color = if (isUser)
-                        Color.White
-                    else
-                        Color(0xFF1F2937), // Gray 900
-                    fontSize = 15.sp,
-                    lineHeight = 22.sp
-                )
-            }
-
-            Text(
-                text = timeFormat.format(Date(message.timestamp)),
-                fontSize = 10.sp,
-                color = Color(0xFF9CA3AF), // Gray 400
-                modifier = Modifier.padding(
-                    start = if (isUser) 0.dp else 8.dp,
-                    end = if (isUser) 8.dp else 0.dp,
-                    top = 4.dp
-                )
-            )
-        }
-
-        if (isUser) {
-            Spacer(modifier = Modifier.width(8.dp))
-            // 用户头像
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFE5E7EB)), // Gray 200
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.Person,
-                    contentDescription = null,
-                    tint = Color(0xFF6B7280), // Gray 500
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun PrototypeBottomInputArea(
-    textInput: String,
-    onTextChange: (String) -> Unit,
-    onSendText: () -> Unit,
-    state: ConversationState,
-    isConnected: Boolean,
-    hasPermissions: Boolean,
-    viewModel: ConversationViewModel
+private fun TopBar(
+    isMuted: Boolean,
+    onShowSettings: () -> Unit,
+    onToggleMute: () -> Unit
 ) {
-    // 底部背景：白色渐变到透明（这里简化为白色背景，上方有一点阴影或渐变）
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.0f),
-                        Color.White
-                    ),
-                    startY = 0f,
-                    endY = 50f
-                )
-            )
-            .padding(bottom = 32.dp, start = 16.dp, end = 16.dp, top = 8.dp)
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color.White.copy(alpha = 0.45f),
+        shadowElevation = 2.dp
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // 药丸形输入栏
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onShowSettings, modifier = Modifier.size(36.dp)) {
+                    Icon(
+                        imageVector = Icons.Outlined.Settings,
+                        contentDescription = "设置",
+                        tint = AuraPrimary
+                    )
+                }
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Aura AI",
+                    color = AuraPrimary,
+                    style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                )
+            }
+
             Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .shadow(12.dp, CircleShape, spotColor = Color(0x46000000)),
                 shape = CircleShape,
-                color = Color.White,
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF3F4F6))
+                color = Color.White.copy(alpha = 0.65f),
+                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.75f))
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // 左侧相机按钮
-//                    IconButton(
-//                        onClick = { /* TODO: Camera action */ },
-//                        modifier = Modifier
-//                            .size(40.dp)
-//                            .background(Color.Transparent, CircleShape)
-//                    ) {
-//                        Icon(
-//                            imageVector = Icons.Outlined.CameraAlt,
-//                            contentDescription = "相机",
-//                            tint = Color(0xFF1F2937), // Gray 900
-//                            modifier = Modifier.size(24.dp)
-//                        )
-//                    }
-
-                    // 中间输入框
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 8.dp),
-                        contentAlignment = Alignment.CenterStart
+                    Text(
+                        text = "字幕",
+                        color = AuraSubText,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Surface(
+                        modifier = Modifier.size(26.dp),
+                        shape = RoundedCornerShape(6.dp),
+                        color = if (isMuted) Color(0xFFE9E7F3) else Color(0xFFE9E9FF)
                     ) {
-                        if (textInput.isEmpty()) {
-                            Text(
-                                text = "发消息或按住说话...",
-                                color = Color(0xFF9CA3AF), // Gray 400
-                                fontSize = 15.sp
-                            )
+                        Box(contentAlignment = Alignment.Center) {
+                            IconButton(onClick = onToggleMute, modifier = Modifier.fillMaxSize()) {
+                                Text(
+                                    text = "CC",
+                                    color = if (isMuted) Color(0xFF7A7583) else AuraPrimary,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
-                        BasicTextField(
-                            value = textInput,
-                            onValueChange = onTextChange,
-                            textStyle = TextStyle(
-                                color = Color(0xFF374151), // Gray 700
-                                fontSize = 15.sp
-                            ),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                            keyboardActions = KeyboardActions(onSend = { onSendText() }),
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
-
-                    // 右侧按钮组
-//                    Row(
-//                        verticalAlignment = Alignment.CenterVertically,
-//                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-//                    ) {
-//                        // 语音按钮 (带长按逻辑)
-//                        VoiceActionButton(
-//                            isConnected = isConnected,
-//                            hasPermissions = hasPermissions,
-//                            viewModel = viewModel
-//                        )
-//
-//                        // 加号按钮
-//                        IconButton(
-//                            onClick = { /* TODO: More actions */ },
-//                            modifier = Modifier
-//                                .size(40.dp)
-//                                .background(Color.Transparent, CircleShape)
-//                        ) {
-//                            Icon(
-//                                imageVector = Icons.Outlined.Add,
-//                                contentDescription = "更多",
-//                                tint = Color(0xFF1F2937),
-//                                modifier = Modifier.size(24.dp)
-//                            )
-//                        }
-//                    }
                 }
             }
         }
@@ -561,58 +364,302 @@ fun PrototypeBottomInputArea(
 }
 
 @Composable
-fun VoiceActionButton(
+private fun AuroraDecor() {
+    Box(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .size(420.dp)
+                .align(Alignment.TopCenter)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            AuraPrimary.copy(alpha = 0.16f),
+                            AuraSecondary.copy(alpha = 0.10f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = CircleShape
+                )
+        )
+
+        Box(
+            modifier = Modifier
+                .size(540.dp)
+                .align(Alignment.Center)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            AuraPrimary.copy(alpha = 0.14f),
+                            AuraTertiary.copy(alpha = 0.09f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = CircleShape
+                )
+        )
+    }
+}
+
+@Composable
+private fun CenterPanel(
+    state: ConversationState,
+    isConnected: Boolean
+) {
+    val pulse = rememberInfiniteTransition(label = "orbPulse")
+    val scale by pulse.animateFloat(
+        initialValue = 0.96f,
+        targetValue = 1.04f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "orbScale"
+    )
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(
+            modifier = Modifier
+                .size(288.dp)
+                .scale(if (state == ConversationState.LISTENING || state == ConversationState.SPEAKING) scale else 1f)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.45f),
+                            Color(0xFFF0E8FF).copy(alpha = 0.68f)
+                        )
+                    ),
+                    shape = CircleShape
+                )
+                .shadow(24.dp, CircleShape, ambientColor = AuraPrimary.copy(alpha = 0.15f))
+                .padding(2.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White.copy(alpha = 0.22f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(7.dp), verticalAlignment = Alignment.Bottom) {
+                    val bars = listOf(28.dp, 54.dp, 78.dp, 42.dp, 64.dp)
+                    bars.forEach { h ->
+                        Box(
+                            modifier = Modifier
+                                .width(10.dp)
+                                .height(h)
+                                .background(
+                                    brush = Brush.verticalGradient(
+                                        colors = listOf(
+                                            AuraPrimary.copy(alpha = 0.45f),
+                                            AuraPrimary.copy(alpha = 0.88f)
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(26.dp))
+        Text(
+            text = stateTitle(state, isConnected),
+            color = AuraText,
+            style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Black)
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = stateSubtitle(state, isConnected),
+            color = AuraSubText,
+            style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            repeat(3) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(Color(0xFFD8D5E2), CircleShape)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "您可以开始说话",
+            color = AuraSubText.copy(alpha = 0.45f),
+            style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium)
+        )
+    }
+}
+
+private fun stateTitle(state: ConversationState, isConnected: Boolean): String {
+    if (!isConnected) return "连接中..."
+    return when (state) {
+        ConversationState.CONNECTING -> "连接中..."
+        ConversationState.LISTENING -> "正在倾听..."
+        ConversationState.PROCESSING -> "正在思考..."
+        ConversationState.SPEAKING -> "正在回答..."
+        ConversationState.IDLE -> "准备就绪"
+    }
+}
+
+private fun stateSubtitle(state: ConversationState, isConnected: Boolean): String {
+    if (!isConnected) return "请稍候"
+    return when (state) {
+        ConversationState.CONNECTING -> "正在建立连接"
+        ConversationState.LISTENING -> "Aura 正在为您服务"
+        ConversationState.PROCESSING -> "正在生成回复"
+        ConversationState.SPEAKING -> "Aura 正在回复您"
+        ConversationState.IDLE -> "点击麦克风开始"
+    }
+}
+
+@Composable
+private fun SmallGlassAction(
+    icon: @Composable () -> Unit,
+    enablePulse: Boolean = false,
+    onClick: () -> Unit,
+    contentOverlay: @Composable (() -> Unit)? = null
+) {
+    Surface(
+        modifier = Modifier.size(56.dp),
+        shape = CircleShape,
+        color = if (enablePulse) Color(0x40FFFFFF) else Color(0x2AFFFFFF),
+        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.65f))
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            IconButton(onClick = onClick, modifier = Modifier.fillMaxSize()) {
+                icon()
+            }
+            contentOverlay?.invoke()
+        }
+    }
+}
+
+@Composable
+private fun HoldToTalkOverlay(
     isConnected: Boolean,
     hasPermissions: Boolean,
     viewModel: ConversationViewModel
 ) {
     val coroutineScope = rememberCoroutineScope()
-    var isPressed by remember { mutableStateOf(false) }
+    var pressed by remember { mutableStateOf(false) }
     var longPressJob by remember { mutableStateOf<Job?>(null) }
 
-    // 录音按钮
-    IconButton(
-        onClick = { /* Click handled by pointerInput below for consistency */ },
+    Box(
         modifier = Modifier
-            .size(40.dp)
-            .background(
-                if (isPressed) Color(0xFFF3F4F6) else Color.Transparent,
-                CircleShape
-            )
-            .pointerInput(hasPermissions, isConnected) {
+            .fillMaxSize()
+            .pointerInput(isConnected, hasPermissions) {
                 awaitEachGesture {
-                    val down = awaitFirstDown()
-                    if (hasPermissions && isConnected) {
-                        isPressed = true
-                        var started = false
-                        longPressJob = coroutineScope.launch {
-                            delay(200) // 稍微延迟防误触
-                            if (isPressed) {
-                                viewModel.startListening()
-                                started = true
-                            }
-                        }
+                    awaitFirstDown()
+                    if (!isConnected || !hasPermissions) {
+                        return@awaitEachGesture
+                    }
 
-                        // 等待抬起
-                        do {
-                            val event = awaitPointerEvent()
-                            // 这里可以添加上滑取消逻辑，为简化暂略
-                        } while (event.changes.any { it.pressed })
-
-                        isPressed = false
-                        longPressJob?.cancel()
-                        if (started) {
-                            viewModel.stopListening()
+                    pressed = true
+                    var started = false
+                    longPressJob = coroutineScope.launch {
+                        delay(180)
+                        if (pressed) {
+                            viewModel.startListening()
+                            started = true
                         }
+                    }
+
+                    do {
+                        val event = awaitPointerEvent()
+                    } while (event.changes.any { it.pressed })
+
+                    pressed = false
+                    longPressJob?.cancel()
+                    if (started) {
+                        viewModel.stopListening()
                     }
                 }
             }
+    )
+}
+
+@Composable
+private fun BottomInputBar(
+    textInput: String,
+    onTextChange: (String) -> Unit,
+    focusRequester: FocusRequester,
+    onKeyboardClick: () -> Unit,
+    onSendText: () -> Unit,
+    onHangup: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .imePadding()
+            .padding(horizontal = 20.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Icon(
-            imageVector = Icons.Outlined.Mic,
-            contentDescription = "语音",
-            tint = if (isPressed) Color(0xFF3B82F6) else Color(0xFF1F2937), // Blue 500 when pressed
-            modifier = Modifier.size(20.dp)
-        )
+        Surface(
+            modifier = Modifier
+                .weight(1f)
+                .height(64.dp),
+            shape = RoundedCornerShape(36.dp),
+            color = Color.White.copy(alpha = 0.82f),
+            tonalElevation = 0.dp,
+            shadowElevation = 10.dp,
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.7f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 18.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    if (textInput.isBlank()) {
+                        Text(
+                            text = "输入消息...",
+                            color = AuraSubText.copy(alpha = 0.5f),
+                            style = TextStyle(fontSize = 16.sp)
+                        )
+                    }
+                    BasicTextField(
+                        value = textInput,
+                        onValueChange = onTextChange,
+                        singleLine = true,
+                        textStyle = TextStyle(color = AuraText, fontSize = 16.sp),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                        keyboardActions = KeyboardActions(onSend = { onSendText() }),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .focusRequester(focusRequester)
+                    )
+                }
+                IconButton(onClick = onKeyboardClick) {
+                    Icon(
+                        imageVector = Icons.Outlined.Keyboard,
+                        contentDescription = "键盘",
+                        tint = AuraSubText
+                    )
+                }
+            }
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Surface(
+                modifier = Modifier.size(82.dp),
+                shape = CircleShape,
+                color = Color(0xFFBD1620),
+                shadowElevation = 8.dp
+            ) {
+                IconButton(onClick = onHangup, modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        text = "END",
+                        color = Color.White,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
     }
 }

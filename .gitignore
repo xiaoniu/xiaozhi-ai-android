@@ -17,3 +17,6 @@ local.properties
 /.idea/AndroidProjectSystem.xml
 /.idea/deploymentTargetSelector.xml
 /app/release/
+/prototype/
+/ota请求.txt
+/.kotlin/
