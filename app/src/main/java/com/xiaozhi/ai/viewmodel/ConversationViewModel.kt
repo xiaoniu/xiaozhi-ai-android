@@ -201,6 +201,13 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     /**
      * 连接到服务器
      */
+    fun connect() {
+        connectToServer()
+    }
+
+    /**
+     * 连接到服务器
+     */
     private fun connectToServer() {
         _state.value = ConversationState.CONNECTING
         

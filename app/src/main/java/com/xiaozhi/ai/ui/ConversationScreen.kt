@@ -31,14 +31,10 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Keyboard
-import androidx.compose.material.icons.outlined.Mic
+import androidx.compose.material.icons.outlined.Call
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -62,19 +58,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,7 +75,6 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
-import com.xiaozhi.ai.data.ConfigManager
 import com.xiaozhi.ai.viewmodel.ConversationState
 import com.xiaozhi.ai.viewmodel.ConversationViewModel
 import kotlinx.coroutines.Job
@@ -128,8 +120,6 @@ fun ConversationScreen(
     val activationCode by viewModel.activationCode.collectAsState()
     val isMuted by viewModel.isMuted.collectAsState()
 
-    var textInput by remember { mutableStateOf("") }
-
     LaunchedEffect(Unit) {
         if (!permissionsState.allPermissionsGranted) {
             permissionsState.launchMultiplePermissionRequest()
@@ -139,8 +129,6 @@ fun ConversationScreen(
     MainConversationContent(
         state = state,
         isConnected = isConnected,
-        textInput = textInput,
-        onTextInputChange = { textInput = it },
         hasPermissions = permissionsState.allPermissionsGranted,
         onShowSettings = onNavigateToSettings,
         showActivationDialog = showActivationDialog,
@@ -156,8 +144,6 @@ fun ConversationScreen(
 private fun MainConversationContent(
     state: ConversationState,
     isConnected: Boolean,
-    textInput: String,
-    onTextInputChange: (String) -> Unit,
     hasPermissions: Boolean,
     onShowSettings: () -> Unit,
     showActivationDialog: Boolean,
@@ -167,9 +153,6 @@ private fun MainConversationContent(
     errorMessage: String?,
     viewModel: ConversationViewModel
 ) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusRequester = remember { FocusRequester() }
-
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -181,24 +164,6 @@ private fun MainConversationContent(
                 isMuted = isMuted,
                 onShowSettings = onShowSettings,
                 onToggleMute = onToggleMute
-            )
-        },
-        bottomBar = {
-            BottomInputBar(
-                textInput = textInput,
-                onTextChange = onTextInputChange,
-                focusRequester = focusRequester,
-                onKeyboardClick = {
-                    focusRequester.requestFocus()
-                    keyboardController?.show()
-                },
-                onSendText = {
-                    if (textInput.isNotBlank()) {
-                        viewModel.sendTextMessage(textInput)
-                        onTextInputChange("")
-                    }
-                },
-                onHangup = { viewModel.interrupt() }
             )
         }
     ) { padding ->
@@ -223,6 +188,14 @@ private fun MainConversationContent(
             ) {
                 Spacer(modifier = Modifier.height(60.dp))
                 CenterPanel(state = state, isConnected = isConnected)
+                
+                Spacer(modifier = Modifier.height(40.dp))
+                
+                CallControlBar(
+                    isConnected = isConnected,
+                    onStartCall = { viewModel.connect() },
+                    onHangup = { viewModel.interrupt() }
+                )
             }
 
             if (!errorMessage.isNullOrBlank()) {
@@ -523,87 +496,30 @@ private fun HoldToTalkOverlay(
 }
 
 @Composable
-private fun BottomInputBar(
-    textInput: String,
-    onTextChange: (String) -> Unit,
-    focusRequester: FocusRequester,
-    onKeyboardClick: () -> Unit,
-    onSendText: () -> Unit,
+private fun CallControlBar(
+    isConnected: Boolean,
+    onStartCall: () -> Unit,
     onHangup: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .imePadding()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        Surface(
-            modifier = Modifier
-                .weight(1f)
-                .height(64.dp),
-            shape = RoundedCornerShape(36.dp),
-            color = Color.White.copy(alpha = 0.82f),
-            tonalElevation = 0.dp,
-            shadowElevation = 10.dp,
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.7f))
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 18.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    if (textInput.isBlank()) {
-                        Text(
-                            text = "输入消息...",
-                            color = AuraSubText.copy(alpha = 0.5f),
-                            style = TextStyle(fontSize = 16.sp)
-                        )
-                    }
-                    BasicTextField(
-                        value = textInput,
-                        onValueChange = onTextChange,
-                        singleLine = true,
-                        textStyle = TextStyle(color = AuraText, fontSize = 16.sp),
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                        keyboardActions = KeyboardActions(onSend = { onSendText() }),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .focusRequester(focusRequester)
-                    )
-                }
-                IconButton(onClick = onKeyboardClick) {
-                    Icon(
-                        imageVector = Icons.Outlined.Keyboard,
-                        contentDescription = "键盘",
-                        tint = AuraSubText
-                    )
-                }
-            }
-        }
+    val backgroundColor = if (isConnected) Color(0xFFBD1620) else Color(0xFF4CAF50)
+    val icon = if (isConnected) Icons.Outlined.Close else Icons.Outlined.Call
+    val onClick = if (isConnected) onHangup else onStartCall
 
-        Surface(
-            onClick = onHangup,
-            modifier = Modifier.height(64.dp),
-            shape = RoundedCornerShape(32.dp),
-            color = Color(0xFFBD1620),
-            shadowElevation = 8.dp
-        ) {
-            Box(
-                modifier = Modifier.padding(horizontal = 24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "END",
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
+    Box(
+        modifier = Modifier
+            .padding(vertical = 14.dp)
+            .size(82.dp)
+            .shadow(8.dp, CircleShape)
+            .background(backgroundColor, CircleShape)
+            .clip(CircleShape)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = if (isConnected) "挂断" else "通话",
+            tint = Color.White,
+            modifier = Modifier.size(32.dp)
+        )
     }
 }
