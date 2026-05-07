@@ -68,6 +68,9 @@ class WebSocketManager(private val context: Context) {
     fun connect(url: String, deviceId: String, token: String) {
         Log.d(TAG, "正在连接WebSocket: $url")
 
+        // 开启自动重连
+        shouldReconnect = true
+
         // 保存连接参数用于自动重连
         lastUrl = url
         lastDeviceId = deviceId
@@ -133,14 +136,19 @@ class WebSocketManager(private val context: Context) {
     }
 
     private fun reconnectAfterDisconnect() {
-        Log.d(TAG, "正在尝试自动重连...")
         isConnected = false
         isHandshakeComplete = false
         sessionId = null
         helloTimeoutJob?.cancel()
+        
+        if (!shouldReconnect) {
+            Log.d(TAG, "已禁用自动重连或手动关闭，跳过重连逻辑")
+            return
+        }
+
+        Log.d(TAG, "连接异常断开，准备自动重连...")
         scope.launch {
-            if (shouldReconnect && lastUrl != null && lastDeviceId != null && lastToken != null) {
-                Log.d(TAG, "连接失败，准备自动重连...")
+            if (lastUrl != null && lastDeviceId != null && lastToken != null) {
                 delay(RECONNECT_DELAY)
                 connect(lastUrl!!, lastDeviceId!!, lastToken!!)
             }

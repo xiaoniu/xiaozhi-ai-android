@@ -194,7 +194,7 @@ private fun MainConversationContent(
                 CallControlBar(
                     isConnected = isConnected,
                     onStartCall = { viewModel.connect() },
-                    onHangup = { viewModel.interrupt() }
+                    onHangup = { viewModel.disconnect() }
                 )
             }
 
@@ -410,10 +410,10 @@ private fun stateSubtitle(state: ConversationState, isConnected: Boolean): Strin
     }
     return when (state) {
         ConversationState.CONNECTING -> "正在建立连接"
-        ConversationState.LISTENING -> "Aura 正在为您服务"
+        ConversationState.LISTENING -> "正在为您服务"
         ConversationState.PROCESSING -> "正在生成回复"
-        ConversationState.SPEAKING -> "Aura 正在回复您"
-        ConversationState.IDLE -> "点击麦克风开始"
+        ConversationState.SPEAKING -> "正在回复您"
+        ConversationState.IDLE -> ""
     }
 }
 

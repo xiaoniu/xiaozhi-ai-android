@@ -584,6 +584,19 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     }
 
     /**
+     * 断开连接并停止所有操作
+     */
+    fun disconnect() {
+        Log.d(TAG, "正在断开连接...")
+        audioManager.stopRecording()
+        audioManager.stopPlaying()
+        webSocketManager.disconnect()
+        _isConnected.value = false
+        _state.value = ConversationState.IDLE
+        isAutoMode = false
+    }
+
+    /**
      * 停止自动对话模式
      */
     fun stopAutoConversation() {
