@@ -388,27 +388,13 @@ private fun CenterPanel(
             color = AuraSubText,
             style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium)
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            repeat(3) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(Color(0xFFD8D5E2), CircleShape)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "您可以开始说话",
-            color = AuraSubText.copy(alpha = 0.45f),
-            style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium)
-        )
     }
 }
 
 private fun stateTitle(state: ConversationState, isConnected: Boolean): String {
-    if (!isConnected) return "连接中..."
+    if (!isConnected) {
+        return if (state == ConversationState.CONNECTING) "连接中..." else "点击后开始通话"
+    }
     return when (state) {
         ConversationState.CONNECTING -> "连接中..."
         ConversationState.LISTENING -> "正在倾听..."
@@ -419,7 +405,9 @@ private fun stateTitle(state: ConversationState, isConnected: Boolean): String {
 }
 
 private fun stateSubtitle(state: ConversationState, isConnected: Boolean): String {
-    if (!isConnected) return "请稍候"
+    if (!isConnected) {
+        return if (state == ConversationState.CONNECTING) "正在建立连接" else ""
+    }
     return when (state) {
         ConversationState.CONNECTING -> "正在建立连接"
         ConversationState.LISTENING -> "Aura 正在为您服务"

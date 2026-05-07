@@ -93,8 +93,8 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
             return
         }
 
-        // 执行OTA检查
-        performOtaCheck()
+        // 不再在初始化时自动检查OTA，改为由用户点击通话触发
+        // performOtaCheck()
     }
     
     /**
@@ -118,14 +118,16 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     }
 
     /**
-     * 执行OTA检查
+     * 执行OTA检查并连接服务器
      */
     private fun performOtaCheck() {
+        _state.value = ConversationState.CONNECTING
         viewModelScope.launch {
             try {
                 // 检查OTA URL是否配置
                 if (config.otaUrl.isBlank()) {
-                    Log.w(TAG, "OTA URL未配置，跳过OTA检查")
+                    Log.w(TAG, "OTA URL未配置，跳过OTA检查直接连接")
+                    connectToServer()
                     return@launch
                 }
                 
@@ -152,18 +154,21 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
                         // 设备未激活，显示激活弹窗
                         _activationCode.value = activation.code
                         _showActivationDialog.value = true
+                        _state.value = ConversationState.IDLE
                         return@onSuccess // 不连接WebSocket，等待用户确认激活
                     }
                     
                     // OTA检查完成后连接WebSocket（仅在没有activation时）
                     connectToServer()
                 }.onFailure { exception ->
-                    Log.e(TAG, "OTA检查失败", exception)
+                    Log.e(TAG, "OTA检查失败，尝试直接连接", exception)
                     _errorMessage.value = "OTA检查失败: ${exception.message}"
+                    connectToServer()
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "OTA检查异常", e)
+                Log.e(TAG, "OTA检查异常，尝试直接连接", e)
                 _errorMessage.value = "OTA检查异常: ${e.message}"
+                connectToServer()
             }
         }
     }
@@ -202,7 +207,7 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
      * 连接到服务器
      */
     fun connect() {
-        connectToServer()
+        performOtaCheck()
     }
 
     /**
