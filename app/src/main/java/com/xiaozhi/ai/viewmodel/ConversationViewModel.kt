@@ -75,26 +75,29 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     private var isAutoMode = false
     private var currentUserMessage: String? = null
 
+    // 音频初始化状态
+    private var isAudioInitialized = false
+
     init {
-        initializeServices()
+        // 仅启动事件监听
+        startEventListening()
     }
 
     /**
-     * 初始化服务
+     * 初始化音频服务（在获得权限后调用）
      */
     @SuppressLint("MissingPermission")
-    private fun initializeServices() {
-        // 首先启动事件监听，确保不会错过任何事件
-        startEventListening()
+    fun initializeAudio() {
+        if (isAudioInitialized) return
         
         // 初始化音频管理器
         if (!audioManager.initialize()) {
             _errorMessage.value = "音频系统初始化失败"
-            return
+        } else {
+            isAudioInitialized = true
+            _errorMessage.value = null // 清除可能存在的错误信息
+            Log.d(TAG, "音频系统初始化成功")
         }
-
-        // 不再在初始化时自动检查OTA，改为由用户点击通话触发
-        // performOtaCheck()
     }
     
     /**
@@ -288,7 +291,7 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     }
     
     /**
-     * 更新配置并重连
+     * 更新配置
      */
     fun updateConfig(newConfig: XiaozhiConfig) {
         val oldConfig = config
@@ -296,12 +299,12 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
         configManager.saveConfig(newConfig)
         Log.d(TAG, "配置已更新")
         
-        // 如果WebSocket相关配置发生变化，需要重连
+        // 如果WebSocket相关配置发生变化，仅断开当前连接，不自动重连
         if (oldConfig.websocketUrl != newConfig.websocketUrl || 
             oldConfig.macAddress != newConfig.macAddress ||
             oldConfig.token != newConfig.token) {
-            Log.d(TAG, "WebSocket配置发生变化，执行重连")
-            reconnect()
+            Log.d(TAG, "WebSocket配置发生变化，断开当前连接，等待用户手动点击通话")
+            disconnect()
         }
     }
 

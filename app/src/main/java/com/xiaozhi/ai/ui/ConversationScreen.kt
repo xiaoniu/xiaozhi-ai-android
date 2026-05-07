@@ -132,8 +132,10 @@ fun ConversationScreen(
     val showSubtitles by viewModel.showSubtitles.collectAsState()
     val messages by viewModel.messages.collectAsState()
 
-    LaunchedEffect(Unit) {
-        if (!permissionsState.allPermissionsGranted) {
+    LaunchedEffect(permissionsState.allPermissionsGranted) {
+        if (permissionsState.allPermissionsGranted) {
+            viewModel.initializeAudio()
+        } else {
             permissionsState.launchMultiplePermissionRequest()
         }
     }
@@ -143,6 +145,7 @@ fun ConversationScreen(
         isConnected = isConnected,
         messages = messages,
         hasPermissions = permissionsState.allPermissionsGranted,
+        onRequestPermissions = { permissionsState.launchMultiplePermissionRequest() },
         onShowSettings = onNavigateToSettings,
         showActivationDialog = showActivationDialog,
         activationCode = activationCode,
@@ -153,12 +156,14 @@ fun ConversationScreen(
     )
 }
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun MainConversationContent(
     state: ConversationState,
     isConnected: Boolean,
     messages: List<Message>,
     hasPermissions: Boolean,
+    onRequestPermissions: () -> Unit,
     onShowSettings: () -> Unit,
     showActivationDialog: Boolean,
     activationCode: String?,
@@ -215,7 +220,13 @@ private fun MainConversationContent(
                 
                 CallControlBar(
                     isConnected = isConnected,
-                    onStartCall = { viewModel.connect() },
+                    onStartCall = {
+                        if (hasPermissions) {
+                            viewModel.connect()
+                        } else {
+                            onRequestPermissions()
+                        }
+                    },
                     onHangup = { viewModel.disconnect() }
                 )
             }
