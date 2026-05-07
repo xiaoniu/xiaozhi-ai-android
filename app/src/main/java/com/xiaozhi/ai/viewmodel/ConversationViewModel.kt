@@ -63,9 +63,9 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     private val _activationCode = MutableStateFlow<String?>(null)
     val activationCode: StateFlow<String?> = _activationCode.asStateFlow()
 
-    // 静音状态管理
-    private val _isMuted = MutableStateFlow(true)
-    val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
+    // 字幕显示状态
+    private val _showSubtitles = MutableStateFlow(false)
+    val showSubtitles: StateFlow<Boolean> = _showSubtitles.asStateFlow()
 
     // 配置管理
     private val configManager = ConfigManager(application)
@@ -320,6 +320,9 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
                 _isConnected.value = true
                 _state.value = ConversationState.IDLE
                 _errorMessage.value = null
+                
+                // 连接成功后自动进入对话模式
+                startAutoConversation()
             }
 
             is WebSocketEvent.Disconnected -> {
@@ -433,12 +436,7 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     private fun handleBinaryMessage(data: ByteArray) {
         
         Log.d(TAG, "收到二进制消息，长度: ${data.size}")
-        // 只有在非静音状态下才播放音频数据
-        if (!_isMuted.value) {
-            audioManager.playAudio(data)
-        } else {
-            Log.d(TAG, "静音模式，跳过音频播放")
-        }
+        audioManager.playAudio(data)
     }
 
     /**
@@ -648,16 +646,11 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     }
 
     /**
-     * 切换静音状态
+     * 切换字幕显示状态
      */
-    fun toggleMute() {
-        _isMuted.value = !_isMuted.value
-        Log.d(TAG, "静音状态切换为: ${_isMuted.value}")
-        
-        // 如果切换到静音状态，停止当前播放
-        if (_isMuted.value) {
-            audioManager.stopPlaying()
-        }
+    fun toggleSubtitles() {
+        _showSubtitles.value = !_showSubtitles.value
+        Log.d(TAG, "字幕显示状态切换为: ${_showSubtitles.value}")
     }
 
     /**

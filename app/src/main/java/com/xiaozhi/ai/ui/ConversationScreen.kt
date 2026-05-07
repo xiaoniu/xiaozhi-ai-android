@@ -118,7 +118,7 @@ fun ConversationScreen(
     val errorMessage by viewModel.errorMessage.collectAsState()
     val showActivationDialog by viewModel.showActivationDialog.collectAsState()
     val activationCode by viewModel.activationCode.collectAsState()
-    val isMuted by viewModel.isMuted.collectAsState()
+    val showSubtitles by viewModel.showSubtitles.collectAsState()
 
     LaunchedEffect(Unit) {
         if (!permissionsState.allPermissionsGranted) {
@@ -133,8 +133,8 @@ fun ConversationScreen(
         onShowSettings = onNavigateToSettings,
         showActivationDialog = showActivationDialog,
         activationCode = activationCode,
-        isMuted = isMuted,
-        onToggleMute = { viewModel.toggleMute() },
+        showSubtitles = showSubtitles,
+        onToggleSubtitles = { viewModel.toggleSubtitles() },
         errorMessage = errorMessage,
         viewModel = viewModel
     )
@@ -148,8 +148,8 @@ private fun MainConversationContent(
     onShowSettings: () -> Unit,
     showActivationDialog: Boolean,
     activationCode: String?,
-    isMuted: Boolean,
-    onToggleMute: () -> Unit,
+    showSubtitles: Boolean,
+    onToggleSubtitles: () -> Unit,
     errorMessage: String?,
     viewModel: ConversationViewModel
 ) {
@@ -161,9 +161,9 @@ private fun MainConversationContent(
         containerColor = Color.Transparent,
         topBar = {
             TopBar(
-                isMuted = isMuted,
+                showSubtitles = showSubtitles,
                 onShowSettings = onShowSettings,
-                onToggleMute = onToggleMute
+                onToggleSubtitles = onToggleSubtitles
             )
         }
     ) { padding ->
@@ -256,9 +256,9 @@ private fun MainConversationContent(
 
 @Composable
 private fun TopBar(
-    isMuted: Boolean,
+    showSubtitles: Boolean,
     onShowSettings: () -> Unit,
-    onToggleMute: () -> Unit
+    onToggleSubtitles: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -290,13 +290,15 @@ private fun TopBar(
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .clickable(onClick = onToggleMute)
+                .clickable(onClick = onToggleSubtitles)
                 .padding(8.dp)
         ) {
             Icon(
-                painter = painterResource(id = if (isMuted) com.xiaozhi.ai.R.drawable.subtitle_off else com.xiaozhi.ai.R.drawable.subtitle_on),
+                painter = painterResource(
+                    id = if (showSubtitles) com.xiaozhi.ai.R.drawable.subtitle_on else com.xiaozhi.ai.R.drawable.subtitle_off
+                ),
                 contentDescription = "字幕",
-                tint = if (isMuted) AuraSubText else AuraPrimary,
+                tint = if (showSubtitles) AuraPrimary else AuraSubText,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -382,18 +384,12 @@ private fun CenterPanel(
             color = AuraText,
             style = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Black)
         )
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = stateSubtitle(state, isConnected),
-            color = AuraSubText,
-            style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Medium)
-        )
     }
 }
 
 private fun stateTitle(state: ConversationState, isConnected: Boolean): String {
     if (!isConnected) {
-        return if (state == ConversationState.CONNECTING) "连接中..." else "点击后开始通话"
+        return if (state == ConversationState.CONNECTING) "连接中..." else "点击后开始对话"
     }
     return when (state) {
         ConversationState.CONNECTING -> "连接中..."
