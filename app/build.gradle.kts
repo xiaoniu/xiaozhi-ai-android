@@ -13,8 +13,8 @@ android {
         applicationId = "com.xiaozhi.ai"
         minSdk = 29
         targetSdk = 35
-        versionCode = 10020
-        versionName = "1.2.0"
+        versionCode = 20000
+        versionName = "2.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         

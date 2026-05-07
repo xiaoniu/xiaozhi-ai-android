@@ -383,11 +383,13 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
                 }
                 
                 "llm" -> {
-                    // 大语言模型表情结果
+                    // 大语言模型结果
                     val emotion = json.get("emotion")?.asString
                     val text = json.get("text")?.asString
                     Log.d(TAG, "收到表情: $emotion, 文本: $text")
-                    // 可以在这里处理表情显示
+                    if (!text.isNullOrEmpty()) {
+                        updateAssistantMessage(text)
+                    }
                 }
                 
                 "tts" -> {
@@ -397,10 +399,19 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
                             // TTS句子开始，显示要播放的文本
                             val text = json.get("text")?.asString
                             if (!text.isNullOrEmpty()) {
-                                addMessage(Message(
-                                    role = MessageRole.ASSISTANT,
-                                    content = text
-                                ))
+                                updateAssistantMessage(text)
+                            }
+                        }
+                        "sentence_end" -> {
+                            // TTS句子结束，有时包含完整的句子内容
+                            val text = json.get("text")?.asString
+                            if (!text.isNullOrEmpty()) {
+                                // 检查是否需要更新（如果sentence_start已经包含了这部分内容则跳过，或者直接替换为更完整的text）
+                                // 这里简单处理：如果当前最后一条助手消息内容不包含这段text，则更新/追加
+                                Log.d(TAG, "收到 sentence_end: $text")
+                                // 注意：根据不同服务端的实现，sentence_end 可能包含整句，也可能只是最后一段
+                                // 为了保险，这里我们信任 sentence_end 的完整性，如果它比当前存的长，就用它
+                                syncAssistantMessage(text)
                             }
                         }
                         "start" -> {
@@ -592,6 +603,44 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
         _isConnected.value = false
         _state.value = ConversationState.IDLE
         isAutoMode = false
+    }
+
+    /**
+     * 更新助手消息（用于流式输出）
+     */
+    private fun updateAssistantMessage(text: String) {
+        val currentMessages = _messages.value.toMutableList()
+        if (currentMessages.isNotEmpty() && currentMessages.last().role == MessageRole.ASSISTANT) {
+            val lastMessage = currentMessages.last()
+            // 如果最后一条消息是助手发的，则追加内容
+            currentMessages[currentMessages.size - 1] = lastMessage.copy(
+                content = lastMessage.content + text
+            )
+            _messages.value = currentMessages
+        } else {
+            // 否则新增一条助手消息
+            addMessage(Message(
+                role = MessageRole.ASSISTANT,
+                content = text
+            ))
+        }
+    }
+
+    /**
+     * 同步助手消息（用于确保 sentence_end 的完整性）
+     */
+    private fun syncAssistantMessage(text: String) {
+        val currentMessages = _messages.value.toMutableList()
+        if (currentMessages.isNotEmpty() && currentMessages.last().role == MessageRole.ASSISTANT) {
+            val lastMessage = currentMessages.last()
+            // 如果最后一条消息长度小于新收到的完整文本，则更新它
+            if (lastMessage.content.length < text.length) {
+                currentMessages[currentMessages.size - 1] = lastMessage.copy(content = text)
+                _messages.value = currentMessages
+            }
+        } else {
+            addMessage(Message(role = MessageRole.ASSISTANT, content = text))
+        }
     }
 
     /**

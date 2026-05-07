@@ -7,7 +7,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,9 +18,11 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,6 +33,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -44,6 +52,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -75,6 +84,8 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.xiaozhi.ai.data.Message
+import com.xiaozhi.ai.data.MessageRole
 import com.xiaozhi.ai.viewmodel.ConversationState
 import com.xiaozhi.ai.viewmodel.ConversationViewModel
 import kotlinx.coroutines.Job
@@ -119,6 +130,7 @@ fun ConversationScreen(
     val showActivationDialog by viewModel.showActivationDialog.collectAsState()
     val activationCode by viewModel.activationCode.collectAsState()
     val showSubtitles by viewModel.showSubtitles.collectAsState()
+    val messages by viewModel.messages.collectAsState()
 
     LaunchedEffect(Unit) {
         if (!permissionsState.allPermissionsGranted) {
@@ -129,6 +141,7 @@ fun ConversationScreen(
     MainConversationContent(
         state = state,
         isConnected = isConnected,
+        messages = messages,
         hasPermissions = permissionsState.allPermissionsGranted,
         onShowSettings = onNavigateToSettings,
         showActivationDialog = showActivationDialog,
@@ -144,6 +157,7 @@ fun ConversationScreen(
 private fun MainConversationContent(
     state: ConversationState,
     isConnected: Boolean,
+    messages: List<Message>,
     hasPermissions: Boolean,
     onShowSettings: () -> Unit,
     showActivationDialog: Boolean,
@@ -177,7 +191,7 @@ private fun MainConversationContent(
                 )
                 .padding(padding)
         ) {
-            AuroraDecor()
+             AuroraDecor()
 
             Column(
                 modifier = Modifier
@@ -186,10 +200,18 @@ private fun MainConversationContent(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Top
             ) {
-                Spacer(modifier = Modifier.height(60.dp))
-                CenterPanel(state = state, isConnected = isConnected)
-                
-                Spacer(modifier = Modifier.height(40.dp))
+                if (showSubtitles) {
+                    MessageList(
+                        messages = messages,
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                    )
+                } else {
+                    Spacer(modifier = Modifier.height(60.dp))
+                    CenterPanel(state = state, isConnected = isConnected)
+                    Spacer(modifier = Modifier.weight(1f))
+                }
                 
                 CallControlBar(
                     isConnected = isConnected,
@@ -281,7 +303,7 @@ private fun TopBar(
         }
 
         Text(
-            text = "Aura AI",
+            text = "xiaozhi",
             color = AuraPrimary,
             style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
             modifier = Modifier.align(Alignment.Center)
@@ -505,5 +527,70 @@ private fun CallControlBar(
             tint = Color.White,
             modifier = Modifier.size(32.dp)
         )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun MessageList(
+    messages: List<Message>,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState()
+
+    // 自动滚动到底部：当消息数量变化或最后一条消息内容变化时触发
+    val lastMessageContent = messages.lastOrNull()?.content
+    LaunchedEffect(messages.size, lastMessageContent) {
+        if (messages.isNotEmpty()) {
+            listState.animateScrollToItem(messages.size - 1)
+        }
+    }
+
+    CompositionLocalProvider(
+        LocalOverscrollConfiguration provides null
+    ) {
+        LazyColumn(
+            state = listState,
+            modifier = modifier,
+            contentPadding = PaddingValues(bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(messages) { message ->
+                ChatBubble(message = message)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChatBubble(message: Message) {
+    val isUser = message.role == MessageRole.USER
+    val alignment = if (isUser) Alignment.End else Alignment.Start
+    val backgroundColor = if (isUser) AuraPrimary else Color.White
+    val contentColor = if (isUser) Color.White else AuraText
+    val shape = if (isUser) {
+        RoundedCornerShape(20.dp, 4.dp, 20.dp, 20.dp)
+    } else {
+        RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp)
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = alignment
+    ) {
+        Surface(
+            color = backgroundColor,
+            shape = shape,
+            shadowElevation = 2.dp,
+            modifier = Modifier.widthIn(max = 280.dp)
+        ) {
+            Text(
+                text = message.content,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                color = contentColor,
+                fontSize = 15.sp,
+                lineHeight = 22.sp
+            )
+        }
     }
 }
