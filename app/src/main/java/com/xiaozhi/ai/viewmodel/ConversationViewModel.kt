@@ -64,7 +64,7 @@ class ConversationViewModel(application: Application) : AndroidViewModel(applica
     val activationCode: StateFlow<String?> = _activationCode.asStateFlow()
 
     // 静音状态管理
-    private val _isMuted = MutableStateFlow(false)
+    private val _isMuted = MutableStateFlow(true)
     val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
 
     // 配置管理

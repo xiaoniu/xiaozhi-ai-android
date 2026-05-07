@@ -10,6 +10,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -292,59 +293,39 @@ private fun TopBar(
             .statusBarsPadding()
             .padding(horizontal = 20.dp, vertical = 12.dp)
     ) {
-        IconButton(
-            onClick = onShowSettings,
+        Box(
             modifier = Modifier
-                .size(36.dp)
                 .align(Alignment.CenterStart)
+                .clickable(onClick = onShowSettings)
+                .padding(8.dp)
         ) {
             Icon(
                 imageVector = Icons.Outlined.Settings,
                 contentDescription = "设置",
-                tint = AuraPrimary
+                tint = AuraPrimary,
+                modifier = Modifier.size(24.dp)
             )
         }
 
         Text(
-            text = "Android小智",
+            text = "Aura AI",
             color = AuraPrimary,
             style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold),
             modifier = Modifier.align(Alignment.Center)
         )
 
-        Surface(
-            modifier = Modifier.align(Alignment.CenterEnd),
-            shape = CircleShape,
-            color = Color.White.copy(alpha = 0.65f),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.75f))
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .clickable(onClick = onToggleMute)
+                .padding(8.dp)
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Text(
-                    text = "字幕",
-                    color = AuraSubText,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Surface(
-                    modifier = Modifier.size(26.dp),
-                    shape = RoundedCornerShape(6.dp),
-                    color = if (isMuted) Color(0xFFE9E7F3) else Color(0xFFE9E9FF)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        IconButton(onClick = onToggleMute, modifier = Modifier.fillMaxSize()) {
-                            Text(
-                                text = "CC",
-                                color = if (isMuted) Color(0xFF7A7583) else AuraPrimary,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
+            Icon(
+                painter = painterResource(id = if (isMuted) com.xiaozhi.ai.R.drawable.subtitle_off else com.xiaozhi.ai.R.drawable.subtitle_on),
+                contentDescription = "字幕",
+                tint = if (isMuted) AuraSubText else AuraPrimary,
+                modifier = Modifier.size(24.dp)
+            )
         }
     }
 }
@@ -605,21 +586,23 @@ private fun BottomInputBar(
             }
         }
 
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Surface(
-                modifier = Modifier.size(64.dp),
-                shape = CircleShape,
-                color = Color(0xFFBD1620),
-                shadowElevation = 8.dp
+        Surface(
+            onClick = onHangup,
+            modifier = Modifier.height(64.dp),
+            shape = RoundedCornerShape(32.dp),
+            color = Color(0xFFBD1620),
+            shadowElevation = 8.dp
+        ) {
+            Box(
+                modifier = Modifier.padding(horizontal = 24.dp),
+                contentAlignment = Alignment.Center
             ) {
-                IconButton(onClick = onHangup, modifier = Modifier.fillMaxSize()) {
-                    Text(
-                        text = "END",
-                        color = Color.White,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = "END",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
