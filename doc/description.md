@@ -4,6 +4,7 @@
 
 ## 📱 功能特性
 
+- **全新UI设计**: 采用 Aetheric Harmony 设计系统，提供更现代的玻璃拟态视觉体验
 - **实时语音对话**: 支持语音录制、实时传输和TTS播放
 - **文本交互**: 支持文本输入和显示
 - **多轮对话**: 支持自动和手动两种对话模式
@@ -75,9 +76,10 @@ app/src/main/cpp/
 
 ### 应用界面展示
 
-![对话](./screenshot/v1.0/Screenshot_20250704_174534.png)
-
-![设置](./screenshot/v1.0/Screenshot_20250704_174622.png)
+<div style="display: flex; gap: 20px; align-items: flex-start;">
+  <img src="../screenshot/v2.0/Screenshot_20260508_133424.png" alt="对话" width="200" />
+  <img src="../screenshot/v2.0/Screenshot_20260508_133549.png" alt="设置" width="200" />
+</div>
 
 ## 📚 文档
 

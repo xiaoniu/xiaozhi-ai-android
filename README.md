@@ -1,11 +1,10 @@
 # 小智AI Android客户端
 
-一个基于小智的Android智能语音对话应用。
+一个模仿豆包的Android智能语音对话应用，基于小智的后端服务。
 
 ## 📱 功能特性
 
-- **文本交互**: 支持文本输入和显示
-- **多轮对话**: 支持自动和手动两种对话模式
+- **全新UI设计**: 采用 Aetheric Harmony 设计系统，提供更现代的玻璃拟态视觉体验
 - **WebSocket通信**: 基于WebSocket的实时双向通信
 - **状态管理**: 完整的对话状态流转和错误处理
 
@@ -14,8 +13,8 @@
 ### 应用界面展示
 
 <div style="display: flex; gap: 20px; align-items: flex-start;">
-  <img src="./screenshot/v1.2/Screenshot_20250819_164340.png" alt="对话" width="200" />
-  <img src="./screenshot/v1.2/Screenshot_20250819_164429.png" alt="设置" width="200" />
+  <img src="./screenshot/v2.0/Screenshot_20260508_133424.png" alt="对话" width="200" />
+  <img src="./screenshot/v2.0/Screenshot_20260508_133549.png" alt="设置" width="200" />
 </div>
 
 ## 使用说明
